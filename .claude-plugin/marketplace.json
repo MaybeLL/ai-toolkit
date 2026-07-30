@@ -1,0 +1,20 @@
+{
+  "name": "maybell-plugins",
+  "description": "MaybeLL's agent plugins for deliberate, evidence-based growth.",
+  "owner": {
+    "name": "MaybeLL"
+  },
+  "plugins": [
+    {
+      "name": "goal-optimizer",
+      "source": "./plugins/goal-optimizer",
+      "description": "A local-first, event-sourced goal optimization system: evidence → capability → gap.",
+      "category": "Productivity",
+      "tags": [
+        "goal-optimization",
+        "capability",
+        "career-growth"
+      ]
+    }
+  ]
+}

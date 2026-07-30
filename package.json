@@ -1,0 +1,25 @@
+{
+  "name": "goal-optimizer-pi-package",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pi package adapter for the Goal Optimizer — a local-first, event-sourced goal optimization system.",
+  "license": "MIT",
+  "keywords": [
+    "pi-package",
+    "goal-optimization",
+    "capability",
+    "career-growth"
+  ],
+  "type": "module",
+  "pi": {
+    "extensions": [
+      "./extensions/goal-optimizer-pi.ts"
+    ],
+    "skills": [
+      "./plugins/goal-optimizer/skills"
+    ]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*"
+  }
+}

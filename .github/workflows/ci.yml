@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - release-v1
+  pull_request:
+    branches:
+      - main
+      - release-v1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Node smoke + INV-2 recompute
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Syntax check the CLI
+        run: node --check plugins/goal-optimizer/scripts/goal.mjs
+
+      - name: Recompute state and assert byte-identical (INV-2)
+        run: |
+          set -euo pipefail
+          SCRIPTS="$PWD/plugins/goal-optimizer/scripts"
+          SRC="$PWD/plugins/goal-optimizer/examples/backend-system-design"
+          WS="$RUNNER_TEMP/ws"
+          cp -R "$SRC" "$WS"
+          node "$SCRIPTS/goal.mjs" assess --workspace "$WS"
+          diff "$SRC/state/capability.json" "$WS/state/capability.json"
+          diff "$SRC/state/gap.json" "$WS/state/gap.json"
+          echo "INV-2 holds: recomputed state is byte-identical to committed state."
+
+      - name: Explain runs
+        run: |
+          set -euo pipefail
+          SCRIPTS="$PWD/plugins/goal-optimizer/scripts"
+          WS="$PWD/plugins/goal-optimizer/examples/backend-system-design"
+          node "$SCRIPTS/goal.mjs" explain idempotency.transfer --workspace "$WS"
+
+  plugin-metadata:
+    name: Plugin metadata
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Validate manifests, marketplace entries, and Skills
+        run: node scripts/validate-plugin-metadata.mjs
