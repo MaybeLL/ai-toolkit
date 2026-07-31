@@ -46,20 +46,24 @@ record → observe    │    assess → explain → next
 
 只需要 **Node.js**(CLI 是单文件、零依赖的 `goal.mjs`)。无数据库、无账号、无云同步。Git 即同步机制。
 
-## ## 安装
+## 安装
 
 所有插件随 `maybell-plugins` marketplace 分发，可在三个宿主加载：
 
 Claude Code:
 
 ```bash
-claude plugin marketplace add MaybeLL/ai-toolkit && claude plugin install goal-optimizer@maybell-plugins
+claude plugin marketplace add MaybeLL/ai-toolkit
+claude plugin install goal-optimizer@maybell-plugins
+claude plugin install productivity@maybell-plugins
 ```
 
 Codex:
 
 ```bash
-codex plugin marketplace add MaybeLL/ai-toolkit && codex plugin add goal-optimizer@maybell-plugins
+codex plugin marketplace add MaybeLL/ai-toolkit
+codex plugin add goal-optimizer@maybell-plugins
+codex plugin add productivity@maybell-plugins
 ```
 
 Pi:
@@ -70,6 +74,21 @@ pi install git:github.com/MaybeLL/ai-toolkit
 
 Claude Code 与 Codex 会自动发现 skill;Pi 通过 `pi.skills` 加载 skill。安装后新开会话即可开始。
 
+### 宿主安装粒度差异
+
+| 宿主 | 安装粒度 | 能否只装一个 plugin |
+|---|---|---|
+| Claude Code | 按 plugin（`plugin install <name>@maybell-plugins`） | 可以，逐个装 |
+| Codex | 按 plugin（`plugin add <name>@maybell-plugins`） | 可以，逐个装 |
+| Pi | 按 package（整个仓库） | 一次全装 |
+
+Pi 以**仓库为粒度**：`pi install git:github.com/MaybeLL/ai-toolkit` 会加载 `package.json` 的 `pi.skills` 里声明的**所有** skill（目前是 goal-optimizer 的 4 个 + productivity 的 9 个）。新增 plugin 时把它加进 `pi.skills` 数组即可，pi 端新开会话自动可见。
+
+若想只让 pi 加载部分 skill，两种方式：
+
+1. `pi config` 交互式启用/禁用单个 skill；
+2. settings.json 用对象形式过滤（如 `"skills": ["!plugins/goal-optimizer/skills"]` 排除某目录）。
+
 ## 更新到最新版 / 看不到新 skill 怎么办
 
 `marketplace add owner/repo` 只拉 GitHub **默认分支**(本仓库默认分支为 `main`),
@@ -79,13 +98,15 @@ Claude Code 与 Codex 会自动发现 skill;Pi 通过 `pi.skills` 加载 skill�
 
 ```bash
 claude plugin uninstall goal-optimizer@maybell-plugins
+claude plugin uninstall productivity@maybell-plugins
 claude plugin marketplace remove maybell-plugins
 claude plugin marketplace add MaybeLL/ai-toolkit
 claude plugin install goal-optimizer@maybell-plugins
+claude plugin install productivity@maybell-plugins
 ```
 
 然后**完全退出并重开 Claude Code**——新 skill 只有整会话重启后才注册,`/reload-plugins` 不够。
-重启后应看到四个 skill:`goal-manage` / `goal-grill` / `goal-log` / `goal-review`。
+重启后 goal-optimizer 应看到四个 skill:`goal-manage` / `goal-grill` / `goal-log` / `goal-review`;productivity 应看到九个 skill(`explain-clearly` / `grilling` 等)。
 
 仍不出现时按此排查:
 
@@ -110,8 +131,8 @@ rm -rf "$WS/state" && node goal.mjs assess --workspace "$WS"
 
 数据由用户自持(就在你指定的 workspace 目录里),卸载插件不会删除任何目标数据。
 
-- Codex:`codex plugin remove goal-optimizer@maybell-plugins`
-- Claude Code:`claude plugin uninstall goal-optimizer@maybell-plugins`
+- Codex:`codex plugin remove goal-optimizer@maybell-plugins` 与 `codex plugin remove productivity@maybell-plugins`
+- Claude Code:`claude plugin uninstall goal-optimizer@maybell-plugins` 与 `claude plugin uninstall productivity@maybell-plugins`
 
 如果不再使用本仓库任何插件,可继续 `... plugin marketplace remove maybell-plugins`。
 
