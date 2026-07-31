@@ -31,15 +31,24 @@ record → observe    │    assess → explain → next
 - **证据链完整** — 任何能力结论都能回溯到 artifact 里的具体行。
 - **职责分离** — Agent 判断语义,CLI 计算每一个数字。
 
-设计全文见 [docs/SPEC.md](docs/SPEC.md)。可运行插件位于 [plugins/goal-optimizer](plugins/goal-optimizer)。
+设计全文见 [docs/SPEC.md](docs/SPEC.md)。
+
+## 仓库布局：个人 agent toolkit
+
+本仓库是 MaybeLL 的个人 agent toolkit，以 **plugin 为单元**开发自己用的能力：
+
+- [plugins/goal-optimizer](plugins/goal-optimizer) — 目标优化系统（CLI + 4 个 skill）
+- [plugins/productivity](plugins/productivity) — 个人生产力 skill 合集（9 个 skill，纯 skill 无代码）
+
+新增能力时按类型放：plugin（成套功能）、mcp（协议服务）、skill（纯技能）、cli（独立命令）。
 
 ## 前置依赖
 
 只需要 **Node.js**(CLI 是单文件、零依赖的 `goal.mjs`)。无数据库、无账号、无云同步。Git 即同步机制。
 
-## 安装
+## ## 安装
 
-插件随 `maybell-plugins` marketplace 分发,可在三个宿主加载:
+所有插件随 `maybell-plugins` marketplace 分发，可在三个宿主加载：
 
 Claude Code:
 

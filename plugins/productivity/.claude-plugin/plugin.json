@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "productivity",
+  "version": "0.1.0",
+  "description": "MaybeLL's personal productivity skill suite: explain clearly, grill plans, model domains, research, TDD, teach, draw diagrams, and more.",
+  "author": {
+    "name": "MaybeLL"
+  },
+  "license": "MIT",
+  "keywords": [
+    "productivity",
+    "skills",
+    "personal-toolkit"
+  ]
+}

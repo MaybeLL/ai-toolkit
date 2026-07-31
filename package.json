@@ -16,7 +16,8 @@
       "./extensions/goal-optimizer-pi.ts"
     ],
     "skills": [
-      "./plugins/goal-optimizer/skills"
+      "./plugins/goal-optimizer/skills",
+      "./plugins/productivity/skills"
     ]
   },
   "peerDependencies": {

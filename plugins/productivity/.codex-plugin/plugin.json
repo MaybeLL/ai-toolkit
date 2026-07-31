@@ -1,0 +1,26 @@
+{
+  "name": "productivity",
+  "version": "0.1.0",
+  "description": "MaybeLL's personal productivity skill suite: explain clearly, grill plans, model domains, research, TDD, teach, draw diagrams, and more.",
+  "author": {
+    "name": "MaybeLL"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Productivity",
+    "shortDescription": "Personal productivity skills: explain, grill, model, research, TDD, teach, diagram.",
+    "longDescription": "A curated suite of personal productivity skills for deliberate work: explain-clearly (structured explanations), grilling / grill-me / grill-with-docs (stress-test plans), domain-modeling (ubiquitous language + ADRs), research (primary-source investigation), tdd (test-first development), teach (coached skill-building), and drawio (diagram authoring).",
+    "developerName": "MaybeLL",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Explain this concept clearly.",
+      "Grill my plan.",
+      "Set up a new research note."
+    ]
+  }
+}
