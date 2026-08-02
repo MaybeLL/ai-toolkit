@@ -233,7 +233,7 @@ checks:
 - `grader_ref` = `task引用#check_id` 或 `common grader引用#check_id`(如 `communication-v1#m1`)——单一管道,判定行标明依据出处(ADR-0005)。
 - `verdict` ∈ `pass | partial | fail | no-evidence`。**no-evidence 是给 judge 的退路**:transcript 未涉及该 check 时如实说没有,不硬判(ADR-0006)。此时 `transcript_ref` 可空,其余情况必填且行段校验(INV-3)。
 - append-only:task/grader 出新版后可对旧 trial 重判(追加),聚合时同一 `(trial_id, 题系#check)` 只取最新版本的判定。
-- **判定纪律**(§7):fresh context;每条 check 独立上下文(不让整体印象污染逐条判定);判定者看不到任何历史结论;可延后、可攒批——trial 一落地事实即安全,grading 何时补都行。
+- **判定纪律**(§7):fresh context;每条 check 独立上下文(不让整体印象污染逐条判定);判定者看不到任何历史结论。**默认紧随 record**(drill 会话 spawn fresh-context 子代理即时判,反馈按 session 粒度,ADR-0008);也可延后攒批——trial 一落地事实即安全,grading 何时补都行。
 
 ### 4.8 state/health.json — topic 健康度(第三层:完全派生)
 
@@ -373,7 +373,7 @@ stale    = 曾健康、现仅因 recency 失格 → 只标注,不排复测(ADR-0
 
 ### 6.4 `goal grade <trial_id>`
 
-打分(M4)。前置:校验 transcript 哈希、trial 未撤销。CLI 输出 transcript + 该 task 的 grader + 适用的 common graders;**判定 Agent(fresh context)逐条 check 独立判定**,草稿经 CLI 校验(grader_ref 存在、verdict 合法、transcript_ref 行段真实非空)后追加 gradings。可延后、可攒批;`assess`/`list` 报告待打分存货。
+打分(M4)。前置:校验 transcript 哈希、trial 未撤销。CLI 输出 transcript + 该 task 的 grader + 适用的 common graders;**判定 Agent(fresh context)逐条 check 独立判定**,草稿经 CLI 校验(grader_ref 存在、verdict 合法、transcript_ref 行段真实非空)后追加 gradings。默认由 drill spawn 的子代理紧随 record 执行(ADR-0008);也可延后攒批,`assess`/`list` 报告待打分存货。
 
 ### 6.5 `goal assess`
 
@@ -401,14 +401,14 @@ stale    = 曾健康、现仅因 recency 失格 → 只标注,不排复测(ADR-0
 |---|---|---|
 | **goal-define** | 定标:topics(weight/critical)起草与修订、词表治理;跨目标 list | M1 |
 | **task-forge** | 制题:按缺口出题 / 用户素材导入 / imported-live 归一化 / grader(含 common)修订 / 参考答案质检 | M2 |
-| **goal-drill** | 施测:取题(`--prompt-only`)→ 主持面试 → 产 transcript → **顺手 record**(会话闭环) | M3 |
-| **goal-grade** | 判定:fresh context 盲判,逐 check 独立,可攒批;含 retract 支线 | M4 |
+| **goal-drill** | 施测:取题(`--prompt-only`)→ 主持面试 → 产 transcript → **顺手 record** → spawn 盲判子代理,按 session 粒度反馈(ADR-0008) | M3 |
+| **goal-grade** | 判定:fresh context 盲判,逐 check 独立;默认作为 drill 的子代理即时执行,独立会话消存货/重判为兜底;含 retract 支线 | M4 |
 | **goal-review** | 复盘:assess → explain → next;stale 与存货提醒 | M6 |
 
 **反锚定靠两道结构性隔离,不靠口头约定:**
 
 1. **预注册(时序隔离)**:grader 在作答前写定(generated/imported)。出题者想 teaching-to-test 也改不了已冻结的标准;`imported-live` 无此保护,以 origin 降权如实标注。
-2. **上下文边界(空间隔离)**:drill 主持人只见 `--prompt-only`(见了 checks 会无意识朝检查点引导);grade 判定者必须 fresh context(不继承主持过面试或看过 state/ 的上下文),且逐 check 独立判定。真实面试在 skill 外发生,经 task-forge 归一化 + goal-grade 入管。
+2. **上下文边界(空间隔离)**:drill 主持人只见 `--prompt-only`(见了 checks 会无意识朝检查点引导);grade 判定者必须 fresh context(不继承主持过面试或看过 state/ 的上下文),且逐 check 独立判定。**隔离是上下文的,不是时间的**(ADR-0008):drill 会话 record 后即可 spawn fresh-context 子代理当场盲判(只传 trial_id),单题当场反馈、多题场次散场后统一反馈。真实面试在 skill 外发生,经 task-forge 归一化 + goal-grade 入管。
 
 真人面试流:用户拿到 transcript → task-forge 归一化(反推题面、按词表起草 grader、用户确认)→ record(type=real_interview)→ grade。全程单一管道(ADR-0003)。
 

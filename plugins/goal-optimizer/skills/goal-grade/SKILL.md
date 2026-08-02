@@ -1,13 +1,18 @@
 ---
 name: goal-grade
-description: 判定(M4):在全新上下文中对 trial 盲判——逐条 check 独立给 verdict(pass/partial/fail/no-evidence)+ 行号证据。当用户想给已入库的 trial 打分、批量消化待打分存货、或在 grader 修订后重判旧 trial 时使用。必须 fresh context:不得继承主持过该面试或看过 state/ 结论的上下文。
+description: 判定(M4):在全新上下文中对 trial 盲判——逐条 check 独立给 verdict(pass/partial/fail/no-evidence)+ 行号证据。默认作为 goal-drill spawn 的 fresh-context 子代理紧随 record 执行(ADR-0008);也可独立会话消化待打分存货、或在 grader 修订后重判旧 trial。必须 fresh context:不得继承主持过该面试或看过 state/ 结论的上下文。
 ---
 
-# Goal Grade(判定:盲判,逐 check,可攒批)
+# Goal Grade(判定:盲判,逐 check)
 
 对一条 trial,按该题的 task grader + 适用的 common graders,**逐条 check 独立判定**,产出带行号证据的 grading。
 
-**盲判纪律(SPEC §7,不可妥协):**
+**两种调用形态(ADR-0008):**
+
+1. **子代理(默认)**——goal-drill 在 record 后 spawn,输入只有 trial_id + workspace。判完 `--write` 落库,向父会话只返回"已落库"与 grading id 清单(多题场次中父会话散场前不该看判定内容)。
+2. **独立会话(兜底)**——消化待打分存货(assess/list 会报告)、grader 修订后重判、或 drill 当场无法 spawn 时的欠账。
+
+**盲判纪律(SPEC §7,两种形态都不可妥协):**
 
 - 本会话必须是 fresh context——没主持过这场面试、没看过 `state/` 任何结论、没读过该用户的历史评价。
 - 逐条 check 独立判定:判完一条再看下一条,不让"整体印象"污染逐条结论。
@@ -41,7 +46,7 @@ node <scripts>/goal.mjs grade <trial_id> --workspace <ws> --write    # stdin 传
 1. `grade <trial_id>`(打印模式)拿材料。CLI 会先校验 transcript 哈希、trial 未被撤销。
 2. 逐条 check:先在 transcript 中找相关段落 → 对照 check 文本给 verdict → 摘证据 + 行号。判定基于行为是否出现,不基于文风好坏(防构念无关方差)。
 3. `--write` 提交。CLI 校验通过即 append-only 落库。
-4. **攒批**:`assess`/`list` 会报告待打分存货(有 trial 无 grading);逐个消化即可。trial 落地后何时打分都行——transcript 和 grader 都不会变质,批量判反而更一致。
+4. **存货兜底**:`assess`/`list` 会报告待打分存货(有 trial 无 grading);独立会话逐个消化。transcript 和 grader 都不会变质,欠账何时补都行。
 5. 重判:task/grader 出新版后可对旧 trial 重判(grade 自动按题系最新版出题),聚合取最新版本判定,旧判定保留(append-only)。
 
 ## 红线
