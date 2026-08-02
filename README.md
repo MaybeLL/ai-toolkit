@@ -72,7 +72,7 @@ Pi:
 pi install git:github.com/MaybeLL/ai-toolkit
 ```
 
-Claude Code 与 Codex 会自动发现 skill;Pi 通过 `pi.skills` 加载 skill。安装后新开会话即可开始。
+Claude Code 与 Codex 会自动发现 skill;Pi 通过 `pi.skills` 加载 skill。安装后**完全重启宿主**新开会话即可开始：任意目录唤 `/skill:goal-define` 建目标，数据自动落在 goal home（`GOAL_OPTIMIZER_HOME` 或默认 `~/goal-optimizer/`），与你的任何项目仓库无关。前置依赖只有 Node.js。
 
 ### 宿主安装粒度差异
 
@@ -82,7 +82,7 @@ Claude Code 与 Codex 会自动发现 skill;Pi 通过 `pi.skills` 加载 skill�
 | Codex | 按 plugin（`plugin add <name>@maybell-plugins`） | 可以，逐个装 |
 | Pi | 按 package（整个仓库） | 一次全装 |
 
-Pi 以**仓库为粒度**：`pi install git:github.com/MaybeLL/ai-toolkit` 会加载 `package.json` 的 `pi.skills` 里声明的**所有** skill（目前是 goal-optimizer 的 4 个 + productivity 的 9 个）。新增 plugin 时把它加进 `pi.skills` 数组即可，pi 端新开会话自动可见。
+Pi 以**仓库为粒度**：`pi install git:github.com/MaybeLL/ai-toolkit` 会加载 `package.json` 的 `pi.skills` 里声明的**所有** skill（目前是 goal-optimizer 的 5 个 + productivity 的 9 个）。新增 plugin 时把它加进 `pi.skills` 数组即可，pi 端新开会话自动可见。
 
 若想只让 pi 加载部分 skill，两种方式：
 
@@ -129,12 +129,15 @@ rm -rf "$GOAL_OPTIMIZER_HOME/state" && node goal.mjs assess
 
 ## 卸载
 
-数据由用户自持(住在 goal home:`GOAL_OPTIMIZER_HOME` 或默认 `~/goal-optimizer/`),卸载插件不会删除任何目标数据。
+数据由用户自持(住在 goal home:`GOAL_OPTIMIZER_HOME` 或默认 `~/goal-optimizer/`),**卸载插件不会删除任何目标数据**——工具和数据的生命周期完全独立。
 
-- Codex:`codex plugin remove goal-optimizer@maybell-plugins` 与 `codex plugin remove productivity@maybell-plugins`
-- Claude Code:`claude plugin uninstall goal-optimizer@maybell-plugins` 与 `claude plugin uninstall productivity@maybell-plugins`
+- Claude Code:`claude plugin uninstall goal-optimizer@maybell-plugins`（及 `productivity@maybell-plugins`）
+- Codex:`codex plugin remove goal-optimizer@maybell-plugins`（及 `productivity@maybell-plugins`）
+- Pi:`pi remove git:github.com/MaybeLL/ai-toolkit`
 
 如果不再使用本仓库任何插件,可继续 `... plugin marketplace remove maybell-plugins`。
+
+卸载后你的题库、逐字稿、判定记录仍在 goal home——纯文本可直接阅读,重装插件即刻接着用;想彻底清除则 `rm -rf ~/goal-optimizer`(及你自建的远端 repo)。
 
 ## 本地验证
 
