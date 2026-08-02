@@ -26,10 +26,13 @@
    仅 plan.json 变更时随下次写侧会话一起提交。
 5. **无 git / 无 remote 时全部静默跳过**——单机用户零打扰,同步是可选增强。
 
-## 换机流程(用户视角)
+## 换机流程(用户视角,接近无感)
 
-新电脑:装插件 → 任意 skill 会话说"我的数据在 <repo>" → Agent
-`git clone <repo> ~/evalme` → 即刻可用。此流程写入 evalme-define。
+三个坐标全固定——仓库名约定为 `evalme-data`、owner = gh 登录用户、本地路径 =
+goal home——故地址可完全推导,用户唯一前提是 gh 已登录。新设备上任一 skill
+发现 home 为空 → `gh repo view <user>/evalme-data` 存在 → 一次确认后自动
+clone 到 home,即刻可用。保留那一次确认(防同名撞库),不再要求用户记
+住/输入任何地址。首台设备建库时固定仓库名,即为此埋锚。
 
 ## 理由
 
