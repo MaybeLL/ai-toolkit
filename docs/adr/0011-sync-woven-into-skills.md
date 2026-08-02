@@ -19,9 +19,9 @@
    remote → `git pull --ff-only`。失败(冲突/离线)则明确告知用户并停在安全侧:
    写侧 skill 建议先解决再练(避免在旧数据上分叉),读侧 skill 可继续(只读旧
    投影,如实标注可能滞后)。
-3. **会话后 push**:写侧 skill(define/forge/drill/grade)在会话产生改动后 →
-   `git add -A && git commit && git push`(有 remote 时)。commit message 带
-   skill 名与摘要。push 失败不阻塞本地事实(已落盘即安全),提醒用户稍后重试。
+3. **同步欠账可见化 + `goal sync`(A/B 加固)**:
+   - `assess`/`list` 顺手报告 git 同步欠账("N 处未提交改动 / N 个 commit 未推送 — run: goal.mjs sync")——用户每次看结果都会被提醒,静默欠账变可见欠账,自愈闭环。纯只读,git 不可用时静默跳过,绝不阻塞测量命令。
+   - `goal sync [--message <m>]`:commit + pull --ff-only + push 一步封装,失败语义统一(非 git 仓库→提示启用;无 remote→只本地 commit;pull 分叉/push 离线→明确报错但本地数据安全)。skill 调它而非散写 git 命令,降低 Agent 执行出错面。
 4. **读侧(review)不 commit**:assess 产物在 state/(gitignore),无需入库;
    仅 plan.json 变更时随下次写侧会话一起提交。
 5. **无 git / 无 remote 时全部静默跳过**——单机用户零打扰,同步是可选增强。
@@ -40,6 +40,6 @@
 
 ## 后果
 
-- 五个 SKILL.md 增加统一的"同步"段落;CLI 无改动。
+- 五个 SKILL.md 增加统一的"同步"段落;CLI 新增 `sync` 命令与 assess/list 的欠账警告(均不影响任何测量计算,INV-2/INV-5 不受牵连)。
 - 顺序 ID 的多设备并发撞车风险仍在(A/B 离线各 record → 同 ID):由
   会话前 pull 大幅降低概率,根治(时间戳 ID)留待多设备成为真实习惯时。

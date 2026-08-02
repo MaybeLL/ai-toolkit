@@ -391,7 +391,11 @@ stale    = 曾健康、现仅因 recency 失格 → 只标注,不排复测(ADR-0
 
 组卷器(ADR-0009):确定性组一场整卷模拟面试。按 topic weight 降序轮转取题,每 topic 优先未尝试题系(would-be unseen/variant),跨 topic 去重;输出卷面(task_ref/topic/would_be_novelty)、建议 session_id、无题可选的 topic(forge_needed)。纯读、无 LLM、不写文件;与 next 的分工:next 答"单点练什么"(补最弱),exam 答"整场考什么"(加权覆盖)。消费方为 goal-drill 的整场模拟流程。
 
-### 6.9 `goal retract <trial_id> --reason <text>` / `goal list --root <dir>`
+### 6.9 `goal sync [--message <m>]`
+
+同步封装(ADR-0011):对 goal home 所在 git 仓库依次 commit(有未提交改动时)→ pull --ff-only → push。非 git 仓库 → 提示如何启用;无 remote → 仅本地 commit;pull 分叉/push 失败 → 明确报错但本地数据安全。配套:`assess`/`list` 顺手报告同步欠账(未提交/未推送),使静默欠账可见。与测量计算完全无关(INV-2/INV-5 不受牵连)。
+
+### 6.10 `goal retract <trial_id> --reason <text>` / `goal list --root <dir>`
 
 同 v0.1 语义:retract 追加撤销;list 跨目标只读总览(critical 不健康置顶,不触发 assess),另报告各目标待打分存货与覆盖盲区。
 

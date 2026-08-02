@@ -19,6 +19,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, appendFileSync, rea
 import { join, resolve, basename } from "node:path";
 import { homedir } from "node:os";
 import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
 
 // ---------------------------------------------------------------------------
 // tunable derived-layer parameters (NOT facts; documented in SPEC §5, "拍初值待校准")
@@ -232,6 +233,51 @@ function readJsonl(path) {
 
 function sha256File(path) {
   return createHash("sha256").update(readFileSync(path)).digest("hex");
+}
+
+// ---------------------------------------------------------------------------
+// git helpers (ADR-0011): sync debt visibility + goal sync. Read helpers never
+// fail hard — a broken/absent git must not block measurement commands.
+// ---------------------------------------------------------------------------
+function git(dir, args, opts = {}) {
+  try {
+    const out = execFileSync("git", ["-C", dir, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], ...opts });
+    return { ok: true, out: out.trim() };
+  } catch (e) {
+    return { ok: false, out: (e.stdout ?? "").toString().trim(), err: (e.stderr ?? e.message ?? "").toString().trim() };
+  }
+}
+
+// Sync-debt snapshot: only meaningful when the git repo root IS the goal home
+// itself (the ADR-0011 setup). If the home merely sits inside some unrelated
+// repo (e.g. the example workspace inside this plugin's dev repo), stay silent —
+// that repo's dirt is not the user's sync debt.
+function gitDebt() {
+  const home = resolveHome();
+  const top = git(home, ["rev-parse", "--show-toplevel"]);
+  if (!top.ok) return null;
+  const root = top.out;
+  if (resolve(root) !== resolve(home)) return null;
+  const dirty = git(root, ["status", "--porcelain"]);
+  const dirtyCount = dirty.ok && dirty.out ? dirty.out.split("\n").length : 0;
+  const upstream = git(root, ["rev-parse", "--abbrev-ref", "@{u}"]);
+  let ahead = 0;
+  let hasRemote = upstream.ok;
+  if (upstream.ok) {
+    const cnt = git(root, ["rev-list", "--count", "@{u}..HEAD"]);
+    if (cnt.ok) ahead = parseInt(cnt.out, 10) || 0;
+  }
+  return { root, dirtyCount, ahead, hasRemote };
+}
+
+function debtWarnings() {
+  const d = gitDebt();
+  if (!d) return [];
+  const w = [];
+  if (d.dirtyCount > 0) w.push(`⚠ sync debt: ${d.dirtyCount} uncommitted change(s) in ${d.root} — run: goal.mjs sync`);
+  if (d.ahead > 0) w.push(`⚠ sync debt: ${d.ahead} commit(s) not pushed — run: goal.mjs sync`);
+  if (d.dirtyCount > 0 && !d.hasRemote) w.push(`  (no remote configured — sync will commit locally; add a remote for cross-device backup)`);
+  return w;
 }
 
 function loadGoal(wsDir) {
@@ -1011,6 +1057,7 @@ function cmdAssess(flags) {
   if (m.pendingGrading.length > 0)
     msg += `⚠ ${m.pendingGrading.length} trial(s) await grading: ${m.pendingGrading.join(", ")}\n`;
   if (coverageGaps.length > 0) msg += `⚠ topics with no tasks in the bank: ${coverageGaps.join(", ")} (forge needed)\n`;
+  for (const w of debtWarnings()) msg += w + "\n";
   process.stdout.write(msg);
 }
 
@@ -1353,6 +1400,66 @@ function cmdList(positional, flags) {
     if (g.top) L.push(`    top gap  ${g.top.topic}  priority ${g.top.priority}  [${g.top.mode}]${g.top.stale ? "  ⚠ stale" : ""}`);
     else L.push(`    ✓ all topics healthy`);
   }
+  for (const w of debtWarnings()) L.push(w);
+  process.stdout.write(L.join("\n") + "\n");
+}
+
+// ---------------------------------------------------------------------------
+// sync — commit + push + pull for the goal home repo (ADR-0011 tier B).
+// Deterministic wrapper so skills call one command instead of ad-hoc git.
+// ---------------------------------------------------------------------------
+function cmdSync(positional, flags) {
+  const root = resolveHome();
+  if (!existsSync(root)) die(`goal home not found: ${root}`);
+  const debt = gitDebt();
+  if (!debt) {
+    process.stdout.write(
+      `${root} is not a git repository — nothing to sync.\n` +
+        `Enable sync: git init + private remote (goal-define walks you through it).\n`
+    );
+    return;
+  }
+  const repo = debt.root;
+  const L = [];
+
+  // 1. commit local changes (facts first — they are already safe on disk).
+  if (debt.dirtyCount > 0) {
+    const add = git(repo, ["add", "-A"]);
+    if (!add.ok) die(`git add failed: ${add.err}`);
+    const message = flags.message ? String(flags.message) : `goal sync: ${debt.dirtyCount} change(s)`;
+    const commit = git(repo, ["commit", "-m", message]);
+    if (!commit.ok) die(`git commit failed: ${commit.err || commit.out}`);
+    L.push(`committed ${debt.dirtyCount} change(s)`);
+  } else {
+    L.push("working tree clean");
+  }
+
+  if (!debt.hasRemote) {
+    L.push("no remote configured — committed locally only (add a remote for cross-device backup)");
+    process.stdout.write(L.join("\n") + "\n");
+    return;
+  }
+
+  // 2. pull --ff-only (never create surprise merges; conflicts surface loudly).
+  const pull = git(repo, ["pull", "--ff-only"]);
+  if (!pull.ok) {
+    L.push(`⚠ pull --ff-only failed: ${pull.err || pull.out}`);
+    L.push("  Local commits are safe. Resolve divergence manually (git status / git pull --rebase), then re-run sync.");
+    process.stdout.write(L.join("\n") + "\n");
+    process.exit(1);
+  }
+  L.push(pull.out.includes("Already up to date") ? "pull: already up to date" : `pull: ${pull.out.split("\n")[0]}`);
+
+  // 3. push.
+  const push = git(repo, ["push"]);
+  if (!push.ok) {
+    L.push(`⚠ push failed: ${push.err || push.out}`);
+    L.push("  Local data is safe; re-run sync when online.");
+    process.stdout.write(L.join("\n") + "\n");
+    process.exit(1);
+  }
+  const after = gitDebt();
+  L.push(after && after.ahead === 0 ? "push: remote up to date ✓" : "push: done");
   process.stdout.write(L.join("\n") + "\n");
 }
 
@@ -1402,9 +1509,12 @@ switch (sub) {
   case "exam":
     cmdExam(flags);
     break;
+  case "sync":
+    cmdSync(positional, flags);
+    break;
   default:
     die(
       `unknown subcommand: ${sub ?? "(none)"}\n` +
-        `usage: goal.mjs <init|list|task|grader|record|retract|grade|assess|explain|next|exam> [--goal <id>] ...`
+        `usage: goal.mjs <init|list|task|grader|record|retract|grade|assess|explain|next|exam|sync> [--goal <id>] ...`
     );
 }
