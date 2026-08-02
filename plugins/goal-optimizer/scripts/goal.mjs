@@ -17,6 +17,7 @@
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync, appendFileSync, readdirSync } from "node:fs";
 import { join, resolve, basename } from "node:path";
+import { homedir } from "node:os";
 import { createHash } from "node:crypto";
 
 // ---------------------------------------------------------------------------
@@ -182,12 +183,59 @@ function loadYaml(text) {
 // ---------------------------------------------------------------------------
 // workspace / io helpers
 // ---------------------------------------------------------------------------
+// goal home resolution (ADR-0010): data lives in one user-level directory, so
+// skills work from any cwd (any project repo) without a data path. Resolution
+// affects only which directory we read — never any computation (INV-2 safe).
+function expandTilde(p) {
+  return p.replace(/^~(?=\/|$)/, homedir());
+}
+function loadUserConfig() {
+  try {
+    return JSON.parse(readFileSync(join(homedir(), ".goal-optimizer", "config.json"), "utf8"));
+  } catch {
+    return {};
+  }
+}
+function resolveHome(flags) {
+  if (flags.root) return resolve(expandTilde(String(flags.root)));
+  if (process.env.GOAL_OPTIMIZER_HOME) return resolve(expandTilde(process.env.GOAL_OPTIMIZER_HOME));
+  const cfg = loadUserConfig();
+  if (cfg.root) return resolve(expandTilde(String(cfg.root)));
+  return join(homedir(), "goal-optimizer");
+}
+function listGoalsUnder(root) {
+  if (!existsSync(root)) return [];
+  return readdirSync(root, { withFileTypes: true })
+    .filter((d) => d.isDirectory() && existsSync(join(root, d.name, "goal.yaml")))
+    .map((d) => d.name)
+    .sort();
+}
 function ws(flags) {
   const dir = flags.workspace || flags.w;
-  if (!dir) die("--workspace <dir> is required");
-  const abs = resolve(String(dir));
-  if (!existsSync(abs)) die(`workspace not found: ${abs}`);
-  return abs;
+  if (dir) {
+    const abs = resolve(expandTilde(String(dir)));
+    if (!existsSync(abs)) die(`workspace not found: ${abs}`);
+    return abs;
+  }
+  const root = resolveHome(flags);
+  if (existsSync(join(root, "goal.yaml"))) return root; // home itself is a single workspace
+  const goals = listGoalsUnder(root);
+  if (goals.length === 0)
+    die(
+      `no goal found under ${root}\n` +
+        `Create one first: goal.mjs init --goal-id <id>  (or point elsewhere with --workspace / GOAL_OPTIMIZER_HOME)`
+    );
+  const cfg = loadUserConfig();
+  const goalId = flags.goal ? String(flags.goal) : goals.length === 1 ? goals[0] : cfg.default_goal ? String(cfg.default_goal) : null;
+  if (!goalId)
+    die(
+      `multiple goals under ${root}: ${goals.join(", ")}\n` +
+        `Pick one with --goal <id>, or set "default_goal" in ~/.goal-optimizer/config.json`
+    );
+  const wsDir = join(root, goalId);
+  if (!existsSync(join(wsDir, "goal.yaml")))
+    die(`goal not found: ${goalId} under ${root} (have: ${goals.join(", ")})`);
+  return wsDir;
 }
 
 function readJsonl(path) {
@@ -623,10 +671,17 @@ checks:
 }
 
 function cmdInit(positional, flags) {
-  const dir = flags.workspace || flags.w || positional[0];
-  if (!dir) die("usage: init --workspace <dir> [--title <t>] [--goal-id <id>] [--created-at <YYYY-MM-DD>]");
-  const abs = resolve(String(dir));
-  const goalId = flags["goal-id"] ? String(flags["goal-id"]) : basename(abs);
+  // ADR-0010: default to <goal home>/<goal-id> so init works from any cwd.
+  let abs;
+  const explicit = flags.workspace || flags.w || positional[0];
+  const goalIdArg = flags["goal-id"] ? String(flags["goal-id"]) : null;
+  if (explicit) {
+    abs = resolve(expandTilde(String(explicit)));
+  } else {
+    if (!goalIdArg) die("usage: init --goal-id <id> [--title <t>] [--created-at <YYYY-MM-DD>]   (or explicit --workspace <dir>)");
+    abs = join(resolveHome(flags), goalIdArg);
+  }
+  const goalId = goalIdArg ?? basename(abs);
   const title = flags.title ? String(flags.title) : goalId;
   const createdAt = flags["created-at"] ? String(flags["created-at"]) : new Date().toISOString().slice(0, 10);
 
@@ -649,6 +704,9 @@ function cmdInit(positional, flags) {
       `  tasks/                         题库(task add 入库)\n` +
       `  transcripts/                   逐字稿(record 时引用)\n` +
       `  (data/ state/ 由 record/assess 自动创建)\n` +
+      (existsSync(join(abs, "..", ".git")) || existsSync(join(abs, ".git"))
+        ? ""
+        : `tip: 建议在 goal home 跑 git init + 私有远端——异地备份 + 跨设备同步(state/ 可 gitignore)\n`) +
       `next: 与 Agent(goal-define)起草 topics → task-forge 制题 → goal-drill 施测。\n`
   );
 }
@@ -1267,9 +1325,9 @@ function summarizeGoal(wsDir) {
 }
 
 function cmdList(positional, flags) {
+  // ADR-0010: --root defaults to the resolved goal home.
   const root = flags.root || flags.workspace || flags.w || positional[0];
-  if (!root) die("usage: list --root <dir> [--json]   (dir = a goal workspace or the parent of several)");
-  const rootAbs = resolve(String(root));
+  const rootAbs = root ? resolve(expandTilde(String(root))) : resolveHome(flags);
   if (!existsSync(rootAbs)) die(`directory not found: ${rootAbs}`);
 
   const wsDirs = [];

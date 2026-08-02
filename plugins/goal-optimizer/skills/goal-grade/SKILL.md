@@ -20,11 +20,13 @@ description: 判定(M4):在全新上下文中对 trial 盲判——逐条 check 
 
 ## CLI 协议
 
-`<scripts>` = 本 SKILL.md 上两级的 `scripts/` 目录;所有命令 `--workspace <ws>`。
+`<scripts>` = 本 SKILL.md 上两级的 `scripts/` 目录。
+
+**workspace 解析(ADR-0010)**:数据住在 goal home(默认 `~/goal-optimizer/`,可由 `GOAL_OPTIMIZER_HOME` 或 `~/.goal-optimizer/config.json` 的 `root` 改),与用户当前所在的项目仓库无关——在任何目录都可直接使用,不要求用户提供数据路径。CLI 自动选中唯一目标;多目标时加 `--goal <id>`(或 config 设 `default_goal`);`--workspace <dir>` 仅作显式覆盖(如示例 workspace)。
 
 ```
-node <scripts>/goal.mjs grade <trial_id> --workspace <ws>            # 打印 transcript + graders
-node <scripts>/goal.mjs grade <trial_id> --workspace <ws> --write    # stdin 传 gradings JSON
+node <scripts>/goal.mjs grade <trial_id>            # 打印 transcript + graders
+node <scripts>/goal.mjs grade <trial_id> --write    # stdin 传 gradings JSON
 ```
 
 打印模式给你:trial 元数据、task 的 prompt+checks、适用的 common graders、transcript 全文。你产出 JSON 数组,每条:

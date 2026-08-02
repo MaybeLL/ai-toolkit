@@ -9,17 +9,19 @@ description: 施测(M3):从题库取题主持一场模拟面试/练习,产出逐
 
 ## CLI 协议
 
-`<scripts>` = 本 SKILL.md 上两级的 `scripts/` 目录;所有命令 `--workspace <ws>`。
+`<scripts>` = 本 SKILL.md 上两级的 `scripts/` 目录。
+
+**workspace 解析(ADR-0010)**:数据住在 goal home(默认 `~/goal-optimizer/`,可由 `GOAL_OPTIMIZER_HOME` 或 `~/.goal-optimizer/config.json` 的 `root` 改),与用户当前所在的项目仓库无关——在任何目录都可直接使用,不要求用户提供数据路径。CLI 自动选中唯一目标;多目标时加 `--goal <id>`(或 config 设 `default_goal`);`--workspace <dir>` 仅作显式覆盖(如示例 workspace)。
 
 ```
-node <scripts>/goal.mjs task show <ref|family> --workspace <ws> --prompt-only   # 只取题面
-node <scripts>/goal.mjs exam --workspace <ws> [--size N]                        # 组一场整卷(ADR-0009)
-node <scripts>/goal.mjs record --workspace <ws> --task <task_ref> \
+node <scripts>/goal.mjs task show <ref|family> --prompt-only   # 只取题面
+node <scripts>/goal.mjs exam [--size N]                        # 组一场整卷(ADR-0009)
+node <scripts>/goal.mjs record --task <task_ref> \
      --type <mock_interview|practice|real_interview> --occurred-at <ISO> \
      [--session <场次id>] [--duration <实际耗时min>] \
      [--time-limit true] [--hints true] [--materials true] --evaluator <agent|human> \
      --transcript <相对 ws 的路径>
-node <scripts>/goal.mjs retract <trial_id> --workspace <ws> --occurred-at <ISO> --reason <文字>
+node <scripts>/goal.mjs retract <trial_id> --occurred-at <ISO> --reason <文字>
 ```
 
 record 不接受 `--novelty`(引擎按题系历史派生)、不接受 `--difficulty`(题目属性)。

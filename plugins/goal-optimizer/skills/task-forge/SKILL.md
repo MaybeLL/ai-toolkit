@@ -17,12 +17,14 @@ description: 制题(M2):按缺口出题、导入用户上传的题目素材、�
 
 ## CLI 协议
 
-`<scripts>` = 本 SKILL.md 上两级的 `scripts/` 目录;所有命令 `--workspace <ws>`。
+`<scripts>` = 本 SKILL.md 上两级的 `scripts/` 目录。
+
+**workspace 解析(ADR-0010)**:数据住在 goal home(默认 `~/goal-optimizer/`,可由 `GOAL_OPTIMIZER_HOME` 或 `~/.goal-optimizer/config.json` 的 `root` 改),与用户当前所在的项目仓库无关——在任何目录都可直接使用,不要求用户提供数据路径。CLI 自动选中唯一目标;多目标时加 `--goal <id>`(或 config 设 `default_goal`);`--workspace <dir>` 仅作显式覆盖(如示例 workspace)。
 
 ```
-node <scripts>/goal.mjs task add --workspace <ws> --file <task.yaml>    # 也接受 stdin
-node <scripts>/goal.mjs task show <ref|family> --workspace <ws> [--prompt-only]
-node <scripts>/goal.mjs grader add --workspace <ws> --file <grader.yaml>   # common grader
+node <scripts>/goal.mjs task add --file <task.yaml>    # 也接受 stdin
+node <scripts>/goal.mjs task show <ref|family> [--prompt-only]
+node <scripts>/goal.mjs grader add --file <grader.yaml>   # common grader
 ```
 
 task YAML 形状(全部字段见 SPEC §4.2):
