@@ -11,7 +11,7 @@ description: 复盘(M6,读取侧):assess 刷新投影 → explain 证据链(band
 
 `<scripts>` = 本 SKILL.md 上两级的 `scripts/` 目录。
 
-**数据位置(ADR-0010)**:数据住在 goal home——用户唯一需要关心的位置开关是 `GOAL_OPTIMIZER_HOME` 环境变量(不设则默认 `~/goal-optimizer/`)。与当前所在项目仓库无关,任何目录直接使用,不需要任何路径参数。CLI 自动选中唯一目标;多目标时加 `--goal <id>`(或 `~/.goal-optimizer/config.json` 设 `default_goal`)。
+**数据位置(ADR-0010)**:数据住在 goal home——唯一的位置开关是 `GOAL_OPTIMIZER_HOME` 环境变量(不设则默认 `~/goal-optimizer/`),无配置文件。与当前所在项目仓库无关,任何目录直接使用,不需要任何路径参数。CLI 自动选中唯一目标;多目标时加 `--goal <id>`。
 
 ```
 node <scripts>/goal.mjs assess  [--as-of <ISO>]

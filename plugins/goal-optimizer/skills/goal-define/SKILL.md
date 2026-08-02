@@ -18,7 +18,7 @@ description: 定标(M1):创建/修订目标与 topics 清单(weight/critical/cro
 
 把 `<scripts>` 解析为本 SKILL.md 上两级(插件根)的 `scripts/` 目录,脚本为 `<scripts>/goal.mjs`,用 `node` 运行(零依赖)。
 
-**数据位置(ADR-0010)**:数据住在 goal home——用户唯一需要关心的位置开关是 `GOAL_OPTIMIZER_HOME` 环境变量(不设则默认 `~/goal-optimizer/`)。与当前所在项目仓库无关,任何目录直接使用。`init --goal-id <id>` 建在 `<home>/<id>`;`list` 扫 home;多目标时其他命令加 `--goal <id>`(或 `~/.goal-optimizer/config.json` 设 `default_goal`)。
+**数据位置(ADR-0010)**:数据住在 goal home——唯一的位置开关是 `GOAL_OPTIMIZER_HOME` 环境变量(不设则默认 `~/goal-optimizer/`),无配置文件。与当前所在项目仓库无关,任何目录直接使用。`init --goal-id <id>` 建在 `<home>/<id>`;`list` 扫 home;多目标时其他命令加 `--goal <id>`。
 
 ```
 node <scripts>/goal.mjs init --goal-id <id> [--title <t>] [--created-at <YYYY-MM-DD>]

@@ -184,24 +184,14 @@ function loadYaml(text) {
 // workspace / io helpers
 // ---------------------------------------------------------------------------
 // goal home resolution (ADR-0010, simplified): data lives in one user-level
-// directory — GOAL_OPTIMIZER_HOME, else ~/.goal-optimizer/config.json root,
-// else ~/goal-optimizer/. That's the only location knob users ever touch;
-// skills work from any cwd. Resolution affects only which directory we read —
-// never any computation (INV-2 safe).
+// directory — GOAL_OPTIMIZER_HOME, else ~/goal-optimizer/. That's the only
+// location knob users ever touch; skills work from any cwd. Resolution affects
+// only which directory we read — never any computation (INV-2 safe).
 function expandTilde(p) {
   return p.replace(/^~(?=\/|$)/, homedir());
 }
-function loadUserConfig() {
-  try {
-    return JSON.parse(readFileSync(join(homedir(), ".goal-optimizer", "config.json"), "utf8"));
-  } catch {
-    return {};
-  }
-}
 function resolveHome() {
   if (process.env.GOAL_OPTIMIZER_HOME) return resolve(expandTilde(process.env.GOAL_OPTIMIZER_HOME));
-  const cfg = loadUserConfig();
-  if (cfg.root) return resolve(expandTilde(String(cfg.root)));
   return join(homedir(), "goal-optimizer");
 }
 function listGoalsUnder(root) {
@@ -220,12 +210,11 @@ function ws(flags) {
       `no goal found under ${root}\n` +
         `Create one first: goal.mjs init --goal-id <id>  (or point GOAL_OPTIMIZER_HOME at your data)`
     );
-  const cfg = loadUserConfig();
-  const goalId = flags.goal ? String(flags.goal) : goals.length === 1 ? goals[0] : cfg.default_goal ? String(cfg.default_goal) : null;
+  const goalId = flags.goal ? String(flags.goal) : goals.length === 1 ? goals[0] : null;
   if (!goalId)
     die(
       `multiple goals under ${root}: ${goals.join(", ")}\n` +
-        `Pick one with --goal <id>, or set "default_goal" in ~/.goal-optimizer/config.json`
+        `Pick one with --goal <id>`
     );
   const wsDir = join(root, goalId);
   if (!existsSync(join(wsDir, "goal.yaml")))

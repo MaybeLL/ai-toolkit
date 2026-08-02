@@ -14,12 +14,11 @@ skill 练一题,不应背诵数据路径,数据也绝不能落进当前项目仓
 1. **goal home**:所有 goal workspace 集中在一个用户级目录(数据的家),
    与任何项目仓库物理隔离。git 同步只发生在 home,项目仓库零污染。
 2. **单一位置开关**:用户唯一需要关心的是 `GOAL_OPTIMIZER_HOME` 环境变量;
-   不设则读 `~/.goal-optimizer/config.json` 的 `root`,再不设则默认
-   `~/goal-optimizer/`。**无 `--workspace` 参数**——命令行路径覆盖与 env var
-   语义重叠,已删除(简化修订);特殊目录(如示例 workspace)用
-   `GOAL_OPTIMIZER_HOME=<dir>` 前缀覆盖。
-3. **目标选择**:home 下多目标时用 `--goal <id>`;单目标自动选中;
-   config 可设 `default_goal`。都没有则报错并列出候选(确定性,不猜)。
+   不设则默认 `~/goal-optimizer/`。**无 `--workspace` 参数、无配置文件**——
+   路径覆盖与 config root 均与 env var 语义重叠,已删除(简化修订);
+   特殊目录(如示例 workspace)用 `GOAL_OPTIMIZER_HOME=<dir>` 前缀覆盖。
+3. **目标选择**:home 下多目标时用 `--goal <id>`;单目标自动选中。
+   歧义则报错并列出候选(确定性,不猜)。
 4. `init --goal-id <id>` 在 `<home>/<id>` 建 workspace,home 不存在则创建并提示
    `git init`(异地备份 + 跨设备同步)。
 5. `list` 扫描 home。
@@ -29,11 +28,11 @@ skill 练一题,不应背诵数据路径,数据也绝不能落进当前项目仓
 - 系统本质是 skill + CLI,应当"在哪都能用";数据主权要求"数据只在一处"。
   两者由解析层撮合,互不妥协。
 - 解析只影响"找到哪个目录",不影响任何计算——INV-2/INV-5 不受牵连。
-- 环境变量 + config 保留高级用户(多机、自定义位置)的自由度;默认值让
-  新用户零配置。
+- 环境变量保留高级用户(多机、自定义位置)的自由度;默认值让
+  新用户零配置。只有一个环境变量时,配置文件是多余的第二入口。
 
 ## 后果
 
-- 五个 skill 的 CLI 协议简化:无任何路径参数;位置只由 env/config/默认值决定。
+- 五个 skill 的 CLI 协议简化:无任何路径参数;位置只由 env/默认值决定。
 - 多设备同步的操作对象明确为 goal home 这一个 git 仓库。
 - ID 顺序编号的多设备并发风险(见同步讨论)不变,仍以"先 pull 后练"纪律兜底。
