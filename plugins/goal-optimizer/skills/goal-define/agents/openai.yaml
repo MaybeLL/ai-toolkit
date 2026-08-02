@@ -1,4 +1,0 @@
-interface:
-  display_name: "Goal Define"
-  short_description: "Define a goal: topics with weights/critical flags — the label vocabulary everything else anchors to"
-  default_prompt: "Use $goal-define to create a new goal workspace and draft its topics list with me."

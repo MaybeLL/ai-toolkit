@@ -12,16 +12,16 @@
 
 同步动作从"用户的记性"移到"skill 的固定步骤",零 CLI 改动(第一档方案):
 
-1. **建目标时引导闭环(goal-define)**:检测 home 非 git 仓库 → Agent 陪用户当场
+1. **建目标时引导闭环(evalme-define)**:检测 home 非 git 仓库 → Agent 陪用户当场
    完成 `git init` + `.gitignore`(state/)+ 首次 commit;有 `gh` 则再
    `gh repo create --private` + push,没有则告知远端可后补。用户只做确认。
 2. **会话前 pull**:每个 skill 会话开始、动数据之前,若 home 是 git 仓库且有
    remote → `git pull --ff-only`。失败(冲突/离线)则明确告知用户并停在安全侧:
    写侧 skill 建议先解决再练(避免在旧数据上分叉),读侧 skill 可继续(只读旧
    投影,如实标注可能滞后)。
-3. **同步欠账可见化 + `goal sync`(A/B 加固)**:
-   - `assess`/`list` 顺手报告 git 同步欠账("N 处未提交改动 / N 个 commit 未推送 — run: goal.mjs sync")——用户每次看结果都会被提醒,静默欠账变可见欠账,自愈闭环。纯只读,git 不可用时静默跳过,绝不阻塞测量命令。
-   - `goal sync [--message <m>]`:commit + pull --ff-only + push 一步封装,失败语义统一(非 git 仓库→提示启用;无 remote→只本地 commit;pull 分叉/push 离线→明确报错但本地数据安全)。skill 调它而非散写 git 命令,降低 Agent 执行出错面。
+3. **同步欠账可见化 + `evalme sync`(A/B 加固)**:
+   - `assess`/`list` 顺手报告 git 同步欠账("N 处未提交改动 / N 个 commit 未推送 — run: evalme.mjs sync")——用户每次看结果都会被提醒,静默欠账变可见欠账,自愈闭环。纯只读,git 不可用时静默跳过,绝不阻塞测量命令。
+   - `evalme sync [--message <m>]`:commit + pull --ff-only + push 一步封装,失败语义统一(非 git 仓库→提示启用;无 remote→只本地 commit;pull 分叉/push 离线→明确报错但本地数据安全)。skill 调它而非散写 git 命令,降低 Agent 执行出错面。
 4. **读侧(review)不 commit**:assess 产物在 state/(gitignore),无需入库;
    仅 plan.json 变更时随下次写侧会话一起提交。
 5. **无 git / 无 remote 时全部静默跳过**——单机用户零打扰,同步是可选增强。
@@ -29,7 +29,7 @@
 ## 换机流程(用户视角)
 
 新电脑:装插件 → 任意 skill 会话说"我的数据在 <repo>" → Agent
-`git clone <repo> ~/goal-optimizer` → 即刻可用。此流程写入 goal-define。
+`git clone <repo> ~/evalme` → 即刻可用。此流程写入 evalme-define。
 
 ## 理由
 

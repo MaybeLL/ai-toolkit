@@ -1,9 +1,9 @@
 ---
-name: goal-define
-description: 定标(M1):创建/修订目标与 topics 清单(weight/critical/cross_cutting),治理 label 权威词表;跨目标总览(list)。当用户想建一个新目标、调整 topic 优先级、给词表加新词、归档删除目标、或想看所有目标的健康概览时使用。制题归 task-forge,施测归 goal-drill,复盘归 goal-review。
+name: evalme-define
+description: 定标(M1):创建/修订目标与 topics 清单(weight/critical/cross_cutting),治理 label 权威词表;跨目标总览(list)。当用户想建一个新目标、调整 topic 优先级、给词表加新词、归档删除目标、或想看所有目标的健康概览时使用。制题归 evalme-forge,施测归 evalme-drill,复盘归 evalme-review。
 ---
 
-# Goal Define(定标:目标 + topics 词表)
+# EvalMe Define(定标:目标 + topics 词表)
 
 目标的全生命周期:建 workspace、起草/修订 `goal.yaml` 的 topics 清单、跨目标总览、归档删除。
 
@@ -16,15 +16,15 @@ description: 定标(M1):创建/修订目标与 topics 清单(weight/critical/cro
 
 ## CLI 协议
 
-把 `<scripts>` 解析为本 SKILL.md 上两级(插件根)的 `scripts/` 目录,脚本为 `<scripts>/goal.mjs`,用 `node` 运行(零依赖)。
+把 `<scripts>` 解析为本 SKILL.md 上两级(插件根)的 `scripts/` 目录,脚本为 `<scripts>/evalme.mjs`,用 `node` 运行(零依赖)。
 
-**数据位置(ADR-0010)**:数据住在 goal home——唯一的位置开关是 `GOAL_OPTIMIZER_HOME` 环境变量(不设则默认 `~/goal-optimizer/`),无配置文件。与当前所在项目仓库无关,任何目录直接使用。`init --goal-id <id>` 建在 `<home>/<id>`;`list` 扫 home;多目标时其他命令加 `--goal <id>`。
+**数据位置(ADR-0010)**:数据住在 goal home——唯一的位置开关是 `EVALME_HOME` 环境变量(不设则默认 `~/evalme/`),无配置文件。与当前所在项目仓库无关,任何目录直接使用。`init --goal-id <id>` 建在 `<home>/<id>`;`list` 扫 home;多目标时其他命令加 `--goal <id>`。
 
-**同步(ADR-0011)**:本 skill 是同步的引导入口——建目标时把 git 闭环搭好(见下方流程),之后各 skill 会话自动 pull/sync。会话开始时若 home 已是 git 仓库且有 remote → 先 `git pull --ff-only`;会话结束有改动(goal.yaml 修订等)→ `node <scripts>/goal.mjs sync --message "goal-define: <摘要>"`。无 git/无 remote 则 sync 自动降级/跳过。
+**同步(ADR-0011)**:本 skill 是同步的引导入口——建目标时把 git 闭环搭好(见下方流程),之后各 skill 会话自动 pull/sync。会话开始时若 home 已是 git 仓库且有 remote → 先 `git pull --ff-only`;会话结束有改动(goal.yaml 修订等)→ `node <scripts>/evalme.mjs sync --message "evalme-define: <摘要>"`。无 git/无 remote 则 sync 自动降级/跳过。
 
 ```
-node <scripts>/goal.mjs init --goal-id <id> [--title <t>] [--created-at <YYYY-MM-DD>]
-node <scripts>/goal.mjs list [--root <dir>] [--json]     # 只读,不触发 assess;默认扫 goal home
+node <scripts>/evalme.mjs init --goal-id <id> [--title <t>] [--created-at <YYYY-MM-DD>]
+node <scripts>/evalme.mjs list [--root <dir>] [--json]     # 只读,不触发 assess;默认扫 goal home
 ```
 
 ## 流程
@@ -38,11 +38,11 @@ node <scripts>/goal.mjs list [--root <dir>] [--json]     # 只读,不触发 asse
    - 用户明确拒绝则尊重——单机使用完全合法,同步是可选增强。
 3. **陪用户起草 topics**:问清楚这个目标真正考什么(内容领域)、哪些横切行为也算数(如 communication,标 `cross_cutting: true`)。weight/critical 是用户的决策——你起草,**用户确认后生效**。
 4. 检查 `graders/communication-v1.yaml` 模板是否贴合,不贴合陪用户改(生效前可自由改;一经 grading 引用即不可变)。
-5. 交接:制题去 **task-forge**(没有题,一切都测不了)。
+5. 交接:制题去 **evalme-forge**(没有题,一切都测不了)。
 
 ### 换机 / 新设备接入
 
-用户说"我在另一台电脑有数据"或新机首次使用时:问到远端地址 → `git clone <repo> ~/goal-optimizer`(或 `$GOAL_OPTIMIZER_HOME` 指向的位置)→ 即刻可用,无需其他步骤。提醒:多设备交替使用时,各 skill 会话自动 pull/push;若 pull 报冲突,先解决再练。
+用户说"我在另一台电脑有数据"或新机首次使用时:问到远端地址 → `git clone <repo> ~/evalme`(或 `$EVALME_HOME` 指向的位置)→ 即刻可用,无需其他步骤。提醒:多设备交替使用时,各 skill 会话自动 pull/push;若 pull 报冲突,先解决再练。
 
 ### 修订 topics
 
@@ -56,4 +56,4 @@ node <scripts>/goal.mjs list [--root <dir>] [--json]     # 只读,不触发 asse
 ## 红线
 
 - 不代填 weight/critical——起草可以,定稿必须用户确认。
-- `list` 是只读的,展示的是最近一次 assess 的结果,可能滞后;要最新数值让用户走 goal-review。
+- `list` 是只读的,展示的是最近一次 assess 的结果,可能滞后;要最新数值让用户走 evalme-review。

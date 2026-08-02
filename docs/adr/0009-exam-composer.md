@@ -11,7 +11,7 @@
 
 ## 决策
 
-新增确定性只读命令 `goal exam`(选题器 next 的姊妹,同属 M6 读取侧):
+新增确定性只读命令 `evalme exam`(选题器 next 的姊妹,同属 M6 读取侧):
 
 - 输入:`--size N`(默认 4)。
 - 逻辑(纯确定性,无 LLM):
@@ -21,7 +21,7 @@
   3. 按 topic 顺序轮转(round-robin)取题,跨 topic 去重题系,直到满 N 或耗尽;
   4. 输出卷面(task_ref + topic + would_be_novelty)、建议 session_id、
      覆盖不足警告(有 weight 但无题可选的 topic → forge_needed)。
-- 消费方:goal-drill 的"整场模拟"流程——按卷面顺序主持,共享 session,
+- 消费方:evalme-drill 的"整场模拟"流程——按卷面顺序主持,共享 session,
   散场后统一反馈(ADR-0008)。
 
 ## 理由

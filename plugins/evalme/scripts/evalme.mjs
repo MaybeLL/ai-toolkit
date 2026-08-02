@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// goal-optimizer CLI v2 — deterministic core for the task-centric model (spec-v0.2).
+// evalme CLI v2 — deterministic core for the task-centric model (spec-v0.2).
 // Subcommands: init | list | task | grader | record | retract | grade | assess | explain | next | exam
 //
 // Design notes (docs/SPEC.md, docs/adr/):
@@ -10,7 +10,7 @@
 // - novelty is derived from history at record time (per task family); transcripts
 //   are notarized by sha256 at record time and verified on read (INV-3).
 // - state/ (health.json, task-index.json) is fully derived (INV-2):
-//     rm -rf state/ && node goal.mjs assess  must reproduce byte-identical output.
+//     rm -rf state/ && node evalme.mjs assess  must reproduce byte-identical output.
 //   "now" for recency is max(occurred_at) across trials (or --as-of), never wall-clock.
 // - state/plan.json is a DECISION artifact written by `next --write`, outside INV-2.
 // - No LLM here (INV-5): the CLI validates and computes; agents judge meaning.
@@ -185,15 +185,15 @@ function loadYaml(text) {
 // workspace / io helpers
 // ---------------------------------------------------------------------------
 // goal home resolution (ADR-0010, simplified): data lives in one user-level
-// directory — GOAL_OPTIMIZER_HOME, else ~/goal-optimizer/. That's the only
+// directory — EVALME_HOME, else ~/evalme/. That's the only
 // location knob users ever touch; skills work from any cwd. Resolution affects
 // only which directory we read — never any computation (INV-2 safe).
 function expandTilde(p) {
   return p.replace(/^~(?=\/|$)/, homedir());
 }
 function resolveHome() {
-  if (process.env.GOAL_OPTIMIZER_HOME) return resolve(expandTilde(process.env.GOAL_OPTIMIZER_HOME));
-  return join(homedir(), "goal-optimizer");
+  if (process.env.EVALME_HOME) return resolve(expandTilde(process.env.EVALME_HOME));
+  return join(homedir(), "evalme");
 }
 function listGoalsUnder(root) {
   if (!existsSync(root)) return [];
@@ -209,7 +209,7 @@ function ws(flags) {
   if (goals.length === 0)
     die(
       `no goal found under ${root}\n` +
-        `Create one first: goal.mjs init --goal-id <id>  (or point GOAL_OPTIMIZER_HOME at your data)`
+        `Create one first: evalme.mjs init --goal-id <id>  (or point EVALME_HOME at your data)`
     );
   const goalId = flags.goal ? String(flags.goal) : goals.length === 1 ? goals[0] : null;
   if (!goalId)
@@ -236,7 +236,7 @@ function sha256File(path) {
 }
 
 // ---------------------------------------------------------------------------
-// git helpers (ADR-0011): sync debt visibility + goal sync. Read helpers never
+// git helpers (ADR-0011): sync debt visibility + evalme sync. Read helpers never
 // fail hard — a broken/absent git must not block measurement commands.
 // ---------------------------------------------------------------------------
 function git(dir, args, opts = {}) {
@@ -280,8 +280,8 @@ function debtWarnings() {
   const d = gitDebt();
   if (!d) return [];
   const w = [];
-  if (d.dirtyCount > 0) w.push(`⚠ sync debt: ${d.dirtyCount} uncommitted change(s) in ${d.root} — run: goal.mjs sync`);
-  if (d.ahead > 0) w.push(`⚠ sync debt: ${d.ahead} commit(s) not pushed — run: goal.mjs sync`);
+  if (d.dirtyCount > 0) w.push(`⚠ sync debt: ${d.dirtyCount} uncommitted change(s) in ${d.root} — run: evalme.mjs sync`);
+  if (d.ahead > 0) w.push(`⚠ sync debt: ${d.ahead} commit(s) not pushed — run: evalme.mjs sync`);
   if (d.dirtyCount > 0 && !d.hasRemote) w.push(`  (no remote configured — sync will commit locally; add a remote for cross-device backup)`);
   return w;
 }
@@ -389,7 +389,7 @@ function verifyTranscripts(wsDir, trial) {
         `transcript hash mismatch for ${trial.trial_id}: ${rel}\n` +
           `  recorded ${expected}\n  actual   ${actual}\n` +
           `The transcript was modified after recording (INV-1 violation). ` +
-          `Remedy: goal.mjs retract ${trial.trial_id} --reason "..." and re-record.`
+          `Remedy: evalme.mjs retract ${trial.trial_id} --reason "..." and re-record.`
       );
     }
   });
@@ -736,7 +736,7 @@ function cmdInit(positional, flags) {
       (existsSync(join(abs, "..", ".git")) || existsSync(join(abs, ".git"))
         ? ""
         : `tip: 建议在 goal home 跑 git init + 私有远端——异地备份 + 跨设备同步(state/ 可 gitignore)\n`) +
-      `next: 与 Agent(goal-define)起草 topics → task-forge 制题 → goal-drill 施测。\n`
+      `next: 与 Agent(evalme-define)起草 topics → evalme-forge 制题 → evalme-drill 施测。\n`
   );
 }
 
@@ -1357,7 +1357,7 @@ function summarizeGoal(wsDir) {
 function cmdList(positional, flags) {
   // ADR-0010: always scans the resolved goal home.
   const rootAbs = resolveHome();
-  if (!existsSync(rootAbs)) die(`goal home not found: ${rootAbs} (set GOAL_OPTIMIZER_HOME or run init first)`);
+  if (!existsSync(rootAbs)) die(`goal home not found: ${rootAbs} (set EVALME_HOME or run init first)`);
 
   const wsDirs = [];
   if (existsSync(join(rootAbs, "goal.yaml"))) wsDirs.push(rootAbs);
@@ -1396,7 +1396,7 @@ function cmdList(positional, flags) {
       meta.push(`target ${g.target_date}${Number.isFinite(dleft) ? ` (${dleft}d left)` : ""}`);
     }
     if (!g.assessed) {
-      L.push(`    (unassessed — run: goal.mjs assess --goal ${g.goal_id})`);
+      L.push(`    (unassessed — run: evalme.mjs assess --goal ${g.goal_id})`);
       if (meta.length) L.push(`    ${meta.join("   ")}`);
       continue;
     }
@@ -1421,7 +1421,7 @@ function cmdSync(positional, flags) {
   if (!debt) {
     process.stdout.write(
       `${root} is not a git repository — nothing to sync.\n` +
-        `Enable sync: git init + private remote (goal-define walks you through it).\n`
+        `Enable sync: git init + private remote (evalme-define walks you through it).\n`
     );
     return;
   }
@@ -1432,7 +1432,7 @@ function cmdSync(positional, flags) {
   if (debt.dirtyCount > 0) {
     const add = git(repo, ["add", "-A"]);
     if (!add.ok) die(`git add failed: ${add.err}`);
-    const message = flags.message ? String(flags.message) : `goal sync: ${debt.dirtyCount} change(s)`;
+    const message = flags.message ? String(flags.message) : `evalme sync: ${debt.dirtyCount} change(s)`;
     const commit = git(repo, ["commit", "-m", message]);
     if (!commit.ok) die(`git commit failed: ${commit.err || commit.out}`);
     L.push(`committed ${debt.dirtyCount} change(s)`);
@@ -1521,6 +1521,6 @@ switch (sub) {
   default:
     die(
       `unknown subcommand: ${sub ?? "(none)"}\n` +
-        `usage: goal.mjs <init|list|task|grader|record|retract|grade|assess|explain|next|exam|sync> [--goal <id>] ...`
+        `usage: evalme.mjs <init|list|task|grader|record|retract|grade|assess|explain|next|exam|sync> [--goal <id>] ...`
     );
 }

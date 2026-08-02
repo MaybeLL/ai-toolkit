@@ -1,4 +1,4 @@
-# Goal Optimizer
+# EvalMe
 
 [![CI](https://github.com/MaybeLL/ai-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MaybeLL/ai-toolkit/actions/workflows/ci.yml)
 
@@ -13,15 +13,15 @@
 
 ```
 定标          制题           施测            判定             复盘
-goal-define → task-forge  →  goal-drill  →  goal-grade  →   goal-review
+evalme-define → evalme-forge  →  evalme-drill  →  evalme-grade  →   evalme-review
 topics 词表    题面+grader     主持→逐字稿      逐 check 盲判     assess→explain→next
 ```
 
-- **goal-define** — 定标:goal.yaml 的 topics 清单 = 优先级声明(weight/critical)+ label 权威词表。**没有数值分数线**:达标是外延式的(该 topic 下 unseen/variant 题的近期通过情况)。
-- **task-forge** — 制题:题面 + **预注册 grader**(行为锚定的 checks,可选 must_pass)+ labels + difficulty + 参考答案质检。三种来源:`generated`(LLM 按缺口出题)/ `imported`(用户上传,作答前补 grader)/ `imported-live`(真实面试事后归一化,如实降权)。横切行为(如 communication)由 **common grader** 承载,定义一次、跨题复用。
-- **goal-drill** — 施测:从题库取题主持,主持人**只看题面**(`--prompt-only`,绝不看 checks),产逐字中立 transcript(SHA-256 公证)并立即 record。novelty(unseen/variant/familiar/repeat)由引擎按题系历史派生,不接受自报。
-- **goal-grade** — 判定:全新上下文盲判,逐条 check 独立给 verdict(pass/partial/fail/no-evidence)+ 行号证据。可攒批:trial 落地即安全,grading 何时补都行。
-- **goal-review** — 复盘:`assess`(确定性重算)→ `explain`(证据链、novelty 分层、成长曲线、stale 标注)→ `next`(选题器:从题库选未做过的 unseen/variant 题,无题可选则 `forge_needed`)。
+- **evalme-define** — 定标:goal.yaml 的 topics 清单 = 优先级声明(weight/critical)+ label 权威词表。**没有数值分数线**:达标是外延式的(该 topic 下 unseen/variant 题的近期通过情况)。
+- **evalme-forge** — 制题:题面 + **预注册 grader**(行为锚定的 checks,可选 must_pass)+ labels + difficulty + 参考答案质检。三种来源:`generated`(LLM 按缺口出题)/ `imported`(用户上传,作答前补 grader)/ `imported-live`(真实面试事后归一化,如实降权)。横切行为(如 communication)由 **common grader** 承载,定义一次、跨题复用。
+- **evalme-drill** — 施测:从题库取题主持,主持人**只看题面**(`--prompt-only`,绝不看 checks),产逐字中立 transcript(SHA-256 公证)并立即 record。novelty(unseen/variant/familiar/repeat)由引擎按题系历史派生,不接受自报。
+- **evalme-grade** — 判定:全新上下文盲判,逐条 check 独立给 verdict(pass/partial/fail/no-evidence)+ 行号证据。可攒批:trial 落地即安全,grading 何时补都行。
+- **evalme-review** — 复盘:`assess`(确定性重算)→ `explain`(证据链、novelty 分层、成长曲线、stale 标注)→ `next`(选题器:从题库选未做过的 unseen/variant 题,无题可选则 `forge_needed`)。
 
 ### 系统不变量
 
@@ -37,14 +37,14 @@ topics 词表    题面+grader     主持→逐字稿      逐 check 盲判     
 
 本仓库是 MaybeLL 的个人 agent toolkit，以 **plugin 为单元**开发自己用的能力：
 
-- [plugins/goal-optimizer](plugins/goal-optimizer) — 能力评测系统（CLI + 5 个 skill）
+- [plugins/evalme](plugins/evalme) — 能力评测系统（CLI + 5 个 skill）
 - [plugins/productivity](plugins/productivity) — 个人生产力 skill 合集（9 个 skill，纯 skill 无代码）
 
 新增能力时按类型放：plugin（成套功能）、mcp（协议服务）、skill（纯技能）、cli（独立命令）。
 
 ## 前置依赖
 
-只需要 **Node.js**(CLI 是单文件、零依赖的 `goal.mjs`)。无数据库、无账号、无云同步。Git 即同步机制。
+只需要 **Node.js**(CLI 是单文件、零依赖的 `evalme.mjs`)。无数据库、无账号、无云同步。Git 即同步机制。
 
 ## 安装
 
@@ -54,7 +54,7 @@ Claude Code:
 
 ```bash
 claude plugin marketplace add MaybeLL/ai-toolkit
-claude plugin install goal-optimizer@maybell-plugins
+claude plugin install evalme@maybell-plugins
 claude plugin install productivity@maybell-plugins
 ```
 
@@ -62,7 +62,7 @@ Codex:
 
 ```bash
 codex plugin marketplace add MaybeLL/ai-toolkit
-codex plugin add goal-optimizer@maybell-plugins
+codex plugin add evalme@maybell-plugins
 codex plugin add productivity@maybell-plugins
 ```
 
@@ -72,7 +72,7 @@ Pi:
 pi install git:github.com/MaybeLL/ai-toolkit
 ```
 
-Claude Code 与 Codex 会自动发现 skill;Pi 通过 `pi.skills` 加载 skill。安装后**完全重启宿主**新开会话即可开始：任意目录唤 `/skill:goal-define` 建目标，数据自动落在 goal home（`GOAL_OPTIMIZER_HOME` 或默认 `~/goal-optimizer/`），与你的任何项目仓库无关。前置依赖只有 Node.js。
+Claude Code 与 Codex 会自动发现 skill;Pi 通过 `pi.skills` 加载 skill。安装后**完全重启宿主**新开会话即可开始：任意目录唤 `/skill:evalme-define` 建目标，数据自动落在 goal home（`EVALME_HOME` 或默认 `~/evalme/`），与你的任何项目仓库无关。前置依赖只有 Node.js。
 
 ### 宿主安装粒度差异
 
@@ -82,12 +82,12 @@ Claude Code 与 Codex 会自动发现 skill;Pi 通过 `pi.skills` 加载 skill�
 | Codex | 按 plugin（`plugin add <name>@maybell-plugins`） | 可以，逐个装 |
 | Pi | 按 package（整个仓库） | 一次全装 |
 
-Pi 以**仓库为粒度**：`pi install git:github.com/MaybeLL/ai-toolkit` 会加载 `package.json` 的 `pi.skills` 里声明的**所有** skill（目前是 goal-optimizer 的 5 个 + productivity 的 9 个）。新增 plugin 时把它加进 `pi.skills` 数组即可，pi 端新开会话自动可见。
+Pi 以**仓库为粒度**：`pi install git:github.com/MaybeLL/ai-toolkit` 会加载 `package.json` 的 `pi.skills` 里声明的**所有** skill（目前是 evalme 的 5 个 + productivity 的 9 个）。新增 plugin 时把它加进 `pi.skills` 数组即可，pi 端新开会话自动可见。
 
 若想只让 pi 加载部分 skill，两种方式：
 
 1. `pi config` 交互式启用/禁用单个 skill；
-2. settings.json 用对象形式过滤（如 `"skills": ["!plugins/goal-optimizer/skills"]` 排除某目录）。
+2. settings.json 用对象形式过滤（如 `"skills": ["!plugins/evalme/skills"]` 排除某目录）。
 
 ## 更新到最新版 / 看不到新 skill 怎么办
 
@@ -97,16 +97,16 @@ Pi 以**仓库为粒度**：`pi install git:github.com/MaybeLL/ai-toolkit` 会�
 **彻底重装 + 整会话重启**(最可靠):
 
 ```bash
-claude plugin uninstall goal-optimizer@maybell-plugins
+claude plugin uninstall evalme@maybell-plugins
 claude plugin uninstall productivity@maybell-plugins
 claude plugin marketplace remove maybell-plugins
 claude plugin marketplace add MaybeLL/ai-toolkit
-claude plugin install goal-optimizer@maybell-plugins
+claude plugin install evalme@maybell-plugins
 claude plugin install productivity@maybell-plugins
 ```
 
 然后**完全退出并重开 Claude Code**——新 skill 只有整会话重启后才注册,`/reload-plugins` 不够。
-重启后 goal-optimizer 应看到五个 skill:`goal-define` / `task-forge` / `goal-drill` / `goal-grade` / `goal-review`;productivity 应看到九个 skill(`explain-clearly` / `grilling` 等)。
+重启后 evalme 应看到五个 skill:`evalme-define` / `evalme-forge` / `evalme-drill` / `evalme-grade` / `evalme-review`;productivity 应看到九个 skill(`explain-clearly` / `grilling` 等)。
 
 仍不出现时按此排查:
 
@@ -117,32 +117,32 @@ claude plugin install productivity@maybell-plugins
 
 ## 试用 worked example
 
-仓库自带一个完整示例 workspace:[`plugins/goal-optimizer/examples/backend-system-design`](plugins/goal-optimizer/examples/backend-system-design)——题库(3 道 task + 1 个 common grader)、三条已判定的 trial、以及派生的健康度状态。
+仓库自带一个完整示例 workspace:[`plugins/evalme/examples/backend-system-design`](plugins/evalme/examples/backend-system-design)——题库(3 道 task + 1 个 common grader)、三条已判定的 trial、以及派生的健康度状态。
 
 ```bash
-cd plugins/goal-optimizer/scripts
-export GOAL_OPTIMIZER_HOME=../examples/backend-system-design
-node goal.mjs explain idempotency
+cd plugins/evalme/scripts
+export EVALME_HOME=../examples/backend-system-design
+node evalme.mjs explain idempotency
 # 从事实重算,验证逐字节一致(INV-2):
-rm -rf "$GOAL_OPTIMIZER_HOME/state" && node goal.mjs assess
+rm -rf "$EVALME_HOME/state" && node evalme.mjs assess
 ```
 
 ## 卸载
 
-数据由用户自持(住在 goal home:`GOAL_OPTIMIZER_HOME` 或默认 `~/goal-optimizer/`),**卸载插件不会删除任何目标数据**——工具和数据的生命周期完全独立。
+数据由用户自持(住在 goal home:`EVALME_HOME` 或默认 `~/evalme/`),**卸载插件不会删除任何目标数据**——工具和数据的生命周期完全独立。
 
-- Claude Code:`claude plugin uninstall goal-optimizer@maybell-plugins`（及 `productivity@maybell-plugins`）
-- Codex:`codex plugin remove goal-optimizer@maybell-plugins`（及 `productivity@maybell-plugins`）
+- Claude Code:`claude plugin uninstall evalme@maybell-plugins`（及 `productivity@maybell-plugins`）
+- Codex:`codex plugin remove evalme@maybell-plugins`（及 `productivity@maybell-plugins`）
 - Pi:`pi remove git:github.com/MaybeLL/ai-toolkit`
 
 如果不再使用本仓库任何插件,可继续 `... plugin marketplace remove maybell-plugins`。
 
-卸载后你的题库、逐字稿、判定记录仍在 goal home——纯文本可直接阅读,重装插件即刻接着用;想彻底清除则 `rm -rf ~/goal-optimizer`(及你自建的远端 repo)。
+卸载后你的题库、逐字稿、判定记录仍在 goal home——纯文本可直接阅读,重装插件即刻接着用;想彻底清除则 `rm -rf ~/evalme`(及你自建的远端 repo)。
 
 ## 本地验证
 
 ```bash
-node --check plugins/goal-optimizer/scripts/goal.mjs
+node --check plugins/evalme/scripts/evalme.mjs
 node scripts/validate-plugin-metadata.mjs
 ```
 

@@ -12,7 +12,7 @@
 
 ## 决策
 
-1. **判定默认紧随 record**:goal-drill 会话在 record 后 spawn 一个 fresh-context
+1. **判定默认紧随 record**:evalme-drill 会话在 record 后 spawn 一个 fresh-context
    盲判子代理,只传 trial_id(不携带任何印象/评语的指针)。子代理自行
    `grade <trial_id>`(打印模式取冻结材料)→ 逐 check 判定 → `--write` 落库。
 2. **反馈按 session 粒度**:
@@ -21,7 +21,7 @@
      统一给——中途反馈会让主持人无意识照顾弱点、也打断用户的面试状态
      (真实面试同样不会中途告知分数)。
 3. **攒批降级为兜底路径**:真实面试导入、grader 修订后的重判、当场无法
-   spawn 时的欠账,仍走独立 goal-grade 会话;"有 trial 无 grading"的存货
+   spawn 时的欠账,仍走独立 evalme-grade 会话;"有 trial 无 grading"的存货
    提醒(assess/list)保留。
 
 ## 隔离论证
@@ -36,7 +36,7 @@
 
 ## 后果
 
-- goal-drill 增加"盲判子代理交接 + session 粒度反馈"流程;drill 会话仍不得
+- evalme-drill 增加"盲判子代理交接 + session 粒度反馈"流程;drill 会话仍不得
   自行判定(它只 spawn,不判)。
-- goal-grade 职责不变,新增"可被 drill 以子代理方式调用"的形态。
+- evalme-grade 职责不变,新增"可被 drill 以子代理方式调用"的形态。
 - 无 CLI/schema 改动:grade 命令与 gradings 契约原样复用。

@@ -1,4 +1,4 @@
-# Goal Optimizer
+# EvalMe
 
 A local-first, append-only **capability measurement system** for humans, organized the way
 agent evals are: every question (task) ships with a preregistered grader; every attempt
@@ -18,24 +18,24 @@ topics      task +       transcript     per-check        assess → explain → 
 词表        grader       + trial        blind verdicts   健康度   证据链    选题
 ```
 
-- **goal-define** (M1) — draft the goal's `topics` list: relative weights, critical
+- **evalme-define** (M1) — draft the goal's `topics` list: relative weights, critical
   flags, and the authoritative label vocabulary. No numeric score lines: passing is
   extensional (recent pass rate on unseen/variant tasks), not "reach 0.75".
-- **task-forge** (M2) — build the task bank. Each task = prompt + **preregistered
+- **evalme-forge** (M2) — build the task bank. Each task = prompt + **preregistered
   grader** (behavior-anchored checks, optional `must_pass`) + labels + difficulty +
   reference solution (QA: the reference must pass its own grader). Three origins:
   `generated` (LLM fills a gap), `imported` (user-supplied question, grader written
   before answering), `imported-live` (real interview normalized after the fact —
   honestly down-weighted). Cross-cutting behaviors (e.g. communication) live in
   **common graders**, defined once and applied across all tasks.
-- **goal-drill** (M3) — host a mock interview from the bank. The interviewer sees the
+- **evalme-drill** (M3) — host a mock interview from the bank. The interviewer sees the
   prompt **only** (`--prompt-only`, never the checks), saves a verbatim neutral
   transcript (sha256-notarized), and records the trial immediately. Novelty
   (unseen/variant/familiar/repeat) is derived from history, never self-reported.
-- **goal-grade** (M4) — blind, per-check verdicts (`pass|partial|fail|no-evidence`)
+- **evalme-grade** (M4) — blind, per-check verdicts (`pass|partial|fail|no-evidence`)
   in a fresh context, each with a line-referenced evidence quote. Batchable: trials
   are safe the moment they land; gradings can be added whenever.
-- **goal-review** (M6) — `assess` (deterministic recompute) → `explain` (evidence
+- **evalme-review** (M6) — `assess` (deterministic recompute) → `explain` (evidence
   chain, novelty breakdown, growth curves, stale markers) → `next` (a task picker,
   not a task inventor: it selects unattempted unseen/variant tasks for the weakest
   topics, or emits `forge_needed`).
@@ -57,7 +57,7 @@ topics      task +       transcript     per-check        assess → explain → 
 
 ## Requirements
 
-Only **Node.js** (the CLI is a single zero-dependency `goal.mjs`). No database, no account,
+Only **Node.js** (the CLI is a single zero-dependency `evalme.mjs`). No database, no account,
 no cloud. Git is the sync mechanism.
 
 ## Install
@@ -65,12 +65,12 @@ no cloud. Git is the sync mechanism.
 This plugin ships in the `maybell-plugins` marketplace and loads in three hosts:
 
 - **Claude Code:** `claude plugin marketplace add MaybeLL/ai-toolkit` then
-  `claude plugin install goal-optimizer@maybell-plugins`. Skills are
+  `claude plugin install evalme@maybell-plugins`. Skills are
   auto-discovered.
 - **Codex:** `codex plugin marketplace add MaybeLL/ai-toolkit` then
-  `codex plugin add goal-optimizer@maybell-plugins`.
+  `codex plugin add evalme@maybell-plugins`.
 - **Pi:** `pi install git:github.com/MaybeLL/ai-toolkit` (add `-l` for project-local).
-  Invoke a skill via e.g. `/skill:goal-drill` or `/skill:goal-review`.
+  Invoke a skill via e.g. `/skill:evalme-drill` or `/skill:evalme-review`.
 
 For a local checkout, register the repo root as a local marketplace.
 
@@ -81,15 +81,15 @@ A complete example workspace lives at
 (3 tasks + 1 common grader), three graded trials, and the derived health state.
 
 ```sh
-cd plugins/goal-optimizer/scripts
-export GOAL_OPTIMIZER_HOME=../examples/backend-system-design
-node goal.mjs explain idempotency
+cd plugins/evalme/scripts
+export EVALME_HOME=../examples/backend-system-design
+node evalme.mjs explain idempotency
 # recompute from facts and confirm it's byte-identical:
-rm -rf "$GOAL_OPTIMIZER_HOME/state" && node goal.mjs assess
+rm -rf "$EVALME_HOME/state" && node evalme.mjs assess
 ```
 
 Your own data lives in the **goal home** — the only location knob is the
-`GOAL_OPTIMIZER_HOME` env var (default `~/goal-optimizer/`). Skills work from any
+`EVALME_HOME` env var (default `~/evalme/`). Skills work from any
 cwd in any project repo; data never lands in the current project.
 
 See [`docs/SPEC.md`](../../docs/SPEC.md) for the full data contract, estimator formulas,

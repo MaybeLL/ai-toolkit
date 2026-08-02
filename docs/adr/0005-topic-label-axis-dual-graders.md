@@ -12,7 +12,7 @@ weight、critical。问题:required 是全系统仅存的凭空绝对数值(0.75
 ## 决策
 
 1. **Requirement 删除,Topic 取代。** goal.yaml 声明 topics 清单:
-   `{id, weight, critical?}`。topics 清单同时是 label 权威词表(task-forge 归一化时
+   `{id, weight, critical?}`。topics 清单同时是 label 权威词表(evalme-forge 归一化时
    只许从词表选 label,加新词先进清单),防开放词汇同义漂移。
 2. **Task 用 label 关联 topic**(去掉 targets)。聚合轴从 capability×dimension 换成 topic。
 3. **达标判据定为外延式**:topic 健康度 = suite 覆盖 + unseen/variant 题近期通过情况

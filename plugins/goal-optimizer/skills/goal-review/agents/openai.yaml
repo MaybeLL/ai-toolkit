@@ -1,4 +1,0 @@
-interface:
-  display_name: "Goal Review"
-  short_description: "Review: topic health with evidence chains, novelty-layered pass rates, stale markers, and a task pick"
-  default_prompt: "Use $goal-review to assess my current topic health, explain the evidence, and pick what to practice next."

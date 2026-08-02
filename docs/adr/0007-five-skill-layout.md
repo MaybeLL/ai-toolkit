@@ -15,11 +15,11 @@ skill 上增补,被否——应从新模型的自然用户活动出发重推。
 
 | Skill | 活动 | 模块 |
 |---|---|---|
-| goal-define | 定标:topics(weight/critical)+ 词表治理;跨目标 list | M1 |
-| task-forge | 制题:出题 / 导入 / imported-live 归一化 / grader 修订 / 参考答案质检 | M2 |
-| goal-drill | 施测:取题(--prompt-only)主持 → transcript → record trial | M3 |
-| goal-grade | 判定:fresh context 盲判,逐 check 独立,可攒批 | M4 |
-| goal-review | 复盘:assess → explain(novelty 分层、成长曲线)→ next(选题器) | M6 |
+| evalme-define | 定标:topics(weight/critical)+ 词表治理;跨目标 list | M1 |
+| evalme-forge | 制题:出题 / 导入 / imported-live 归一化 / grader 修订 / 参考答案质检 | M2 |
+| evalme-drill | 施测:取题(--prompt-only)主持 → transcript → record trial | M3 |
+| evalme-grade | 判定:fresh context 盲判,逐 check 独立,可攒批 | M4 |
+| evalme-review | 复盘:assess → explain(novelty 分层、成长曲线)→ next(选题器) | M6 |
 
 ## 划界依据
 
@@ -32,4 +32,4 @@ skill 上增补,被否——应从新模型的自然用户活动出发重推。
 ## 后果
 
 - v0.1 的 goal-manage 拆为 define + forge;goal-grill → drill;goal-log → grade
-  (record 移入 drill);goal-review 保留。
+  (record 移入 drill);evalme-review 保留。

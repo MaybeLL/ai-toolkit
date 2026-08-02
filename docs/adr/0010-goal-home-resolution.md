@@ -13,10 +13,10 @@ skill 练一题,不应背诵数据路径,数据也绝不能落进当前项目仓
 
 1. **goal home**:所有 goal workspace 集中在一个用户级目录(数据的家),
    与任何项目仓库物理隔离。git 同步只发生在 home,项目仓库零污染。
-2. **单一位置开关**:用户唯一需要关心的是 `GOAL_OPTIMIZER_HOME` 环境变量;
-   不设则默认 `~/goal-optimizer/`。**无 `--workspace` 参数、无配置文件**——
+2. **单一位置开关**:用户唯一需要关心的是 `EVALME_HOME` 环境变量;
+   不设则默认 `~/evalme/`。**无 `--workspace` 参数、无配置文件**——
    路径覆盖与 config root 均与 env var 语义重叠,已删除(简化修订);
-   特殊目录(如示例 workspace)用 `GOAL_OPTIMIZER_HOME=<dir>` 前缀覆盖。
+   特殊目录(如示例 workspace)用 `EVALME_HOME=<dir>` 前缀覆盖。
 3. **目标选择**:home 下多目标时用 `--goal <id>`;单目标自动选中。
    歧义则报错并列出候选(确定性,不猜)。
 4. `init --goal-id <id>` 在 `<home>/<id>` 建 workspace,home 不存在则创建并提示

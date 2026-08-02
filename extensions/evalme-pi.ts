@@ -1,4 +1,4 @@
-// Pi extension for the goal-optimizer package.
+// Pi extension for the evalme package.
 //
 // v1 uses no lifecycle hooks (see docs/SPEC.md §7 — the system is a deterministic
 // CLI + Skill, no MCP/UI/Hook). Pi auto-loads the skills declared in package.json's
@@ -7,6 +7,6 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 export default function (_pi: ExtensionAPI) {
-	// Intentionally empty. Skills are loaded via `pi.skills`; the goal.mjs CLI is
-	// driven directly by the agent per skills/goal-optimizer/SKILL.md.
+	// Intentionally empty. Skills are loaded via `pi.skills`; the evalme.mjs CLI is
+	// driven directly by the agent per skills/evalme/SKILL.md.
 }

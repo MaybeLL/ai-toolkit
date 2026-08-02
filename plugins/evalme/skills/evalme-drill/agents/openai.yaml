@@ -1,4 +1,4 @@
 interface:
-  display_name: "Goal Drill"
+  display_name: "EvalMe Drill"
   short_description: "Drill: host a mock interview from the task bank (prompt-only), save the transcript, record the trial"
-  default_prompt: "Use $goal-drill to run a mock interview on a task from my bank and record it."
+  default_prompt: "Use $evalme-drill to run a mock interview on a task from my bank and record it."

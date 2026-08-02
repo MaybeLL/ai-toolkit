@@ -1,7 +1,7 @@
-# CONTEXT — Goal Optimizer 术语表
+# CONTEXT — EvalMe 术语表
 
 > 本文件只是术语表(ubiquitous language),不含实现细节。
-> 适用范围:plugins/goal-optimizer 及 docs/SPEC.md。
+> 适用范围:plugins/evalme 及 docs/SPEC.md。
 
 ## 术语
 
@@ -43,7 +43,7 @@ grading 行以 `grader_ref` 锚定判定依据(task_ref 或 common grader 版本
 一次尝试的完整过程记录文件(面试逐字稿等),只增不改,哈希公证。取代 v0.1 的 "artifact"。
 
 ### Grading
-LLM 按 grader 对 transcript 逐条 check 判定后产出的结构化结果(append-only,存于 gradings.jsonl)。每条以 `grader_ref`(task 版本或 common grader 版本 + check id)锚定判定依据、指向 transcript 具体行号。取代 v0.1 的 "observation";动作/命令为 `goal grade`(取代 `goal observe`)。
+LLM 按 grader 对 transcript 逐条 check 判定后产出的结构化结果(append-only,存于 gradings.jsonl)。每条以 `grader_ref`(task 版本或 common grader 版本 + check id)锚定判定依据、指向 transcript 具体行号。取代 v0.1 的 "observation";动作/命令为 `evalme grade`(取代 `goal observe`)。
 
 ### Retraction
 撤销一条记错的 trial 的追加事件。纠错的唯一路径(事实不可变)。

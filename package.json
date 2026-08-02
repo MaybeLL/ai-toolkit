@@ -1,8 +1,8 @@
 {
-  "name": "goal-optimizer-pi-package",
+  "name": "evalme-pi-package",
   "version": "0.1.0",
   "private": true,
-  "description": "Pi package adapter for the Goal Optimizer — a local-first, append-only capability measurement system organized like agent evals.",
+  "description": "Pi package adapter for the EvalMe — a local-first, append-only capability measurement system organized like agent evals.",
   "license": "MIT",
   "keywords": [
     "pi-package",
@@ -13,10 +13,10 @@
   "type": "module",
   "pi": {
     "extensions": [
-      "./extensions/goal-optimizer-pi.ts"
+      "./extensions/evalme-pi.ts"
     ],
     "skills": [
-      "./plugins/goal-optimizer/skills",
+      "./plugins/evalme/skills",
       "./plugins/productivity/skills"
     ]
   },

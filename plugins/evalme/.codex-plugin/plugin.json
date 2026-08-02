@@ -1,5 +1,5 @@
 {
-  "name": "goal-optimizer",
+  "name": "evalme",
   "version": "0.1.0",
   "description": "A local-first, append-only capability measurement system for humans, organized like agent evals: tasks with preregistered graders, transcripts, per-check blind verdicts, and an evidence chain from every conclusion back to a line in the transcript.",
   "author": {
@@ -7,10 +7,10 @@
   },
   "skills": "./skills/",
   "interface": {
-    "displayName": "Goal Optimizer",
+    "displayName": "EvalMe",
     "shortDescription": "Measure yourself like an agent eval: task bank → trial → blind grading → evidence-chained health per topic.",
     "longDescription": "A local-first, append-only capability measurement system for humans. Define topics (weights + label vocabulary), forge tasks with preregistered behavior-anchored graders, drill from the bank (prompt-only hosting, notarized transcripts, derived novelty), grade blind per-check in a fresh context, then review: deterministic assess, an evidence chain down to transcript lines, novelty-layered pass rates, stale markers, and a task picker. No numeric score lines — passing is extensional (recent pass rate on unseen/variant tasks). Every projection is byte-for-byte recomputable. v1 scope: backend system-design interviews.",
-    "developerName": "Goal Optimizer Contributors",
+    "developerName": "EvalMe Contributors",
     "category": "Productivity",
     "capabilities": [
       "Interactive",
