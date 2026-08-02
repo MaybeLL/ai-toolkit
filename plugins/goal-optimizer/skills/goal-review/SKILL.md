@@ -13,6 +13,8 @@ description: 复盘(M6,读取侧):assess 刷新投影 → explain 证据链(band
 
 **数据位置(ADR-0010)**:数据住在 goal home——唯一的位置开关是 `GOAL_OPTIMIZER_HOME` 环境变量(不设则默认 `~/goal-optimizer/`),无配置文件。与当前所在项目仓库无关,任何目录直接使用,不需要任何路径参数。CLI 自动选中唯一目标;多目标时加 `--goal <id>`。
 
+**同步(ADR-0011)**:会话开始时,若 goal home 是 git 仓库且有 remote → 先 `git pull --ff-only`,确保看的是最新事实;失败(离线/冲突)可继续,但要告知用户结论可能滞后。本 skill 只读,不 commit(state/ 在 gitignore 中,plan.json 随下次写侧会话提交)。
+
 ```
 node <scripts>/goal.mjs assess  [--as-of <ISO>]
 node <scripts>/goal.mjs explain <topic>

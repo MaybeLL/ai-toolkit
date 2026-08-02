@@ -13,6 +13,8 @@ description: 施测(M3):从题库取题主持一场模拟面试/练习,产出逐
 
 **数据位置(ADR-0010)**:数据住在 goal home——唯一的位置开关是 `GOAL_OPTIMIZER_HOME` 环境变量(不设则默认 `~/goal-optimizer/`),无配置文件。与当前所在项目仓库无关,任何目录直接使用,不需要任何路径参数。CLI 自动选中唯一目标;多目标时加 `--goal <id>`。
 
+**同步(ADR-0011)**:会话开始动数据前,若 goal home 是 git 仓库且有 remote → 先 `git pull --ff-only`(失败则告知用户先解决,别在旧数据上继续写)。会话结束且有改动 → `git add -A && git commit -m "goal-drill: <摘要>" && git push`(push 失败不阻塞——本地已落盘即安全,提醒稍后重试)。home 不是 git 仓库或无 remote 时全部静默跳过,不打扰单机用户。
+
 ```
 node <scripts>/goal.mjs task show <ref|family> --prompt-only   # 只取题面
 node <scripts>/goal.mjs exam [--size N]                        # 组一场整卷(ADR-0009)

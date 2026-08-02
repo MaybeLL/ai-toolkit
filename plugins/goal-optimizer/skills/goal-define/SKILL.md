@@ -20,6 +20,8 @@ description: 定标(M1):创建/修订目标与 topics 清单(weight/critical/cro
 
 **数据位置(ADR-0010)**:数据住在 goal home——唯一的位置开关是 `GOAL_OPTIMIZER_HOME` 环境变量(不设则默认 `~/goal-optimizer/`),无配置文件。与当前所在项目仓库无关,任何目录直接使用。`init --goal-id <id>` 建在 `<home>/<id>`;`list` 扫 home;多目标时其他命令加 `--goal <id>`。
 
+**同步(ADR-0011)**:本 skill 是同步的引导入口——建目标时把 git 闭环搭好(见下方流程),之后各 skill 会话自动 pull/push。会话开始时若 home 已是 git 仓库且有 remote → 先 `git pull --ff-only`;会话结束有改动(goal.yaml 修订等)→ `git add -A && git commit && git push`。无 git/无 remote 则静默跳过。
+
 ```
 node <scripts>/goal.mjs init --goal-id <id> [--title <t>] [--created-at <YYYY-MM-DD>]
 node <scripts>/goal.mjs list [--root <dir>] [--json]     # 只读,不触发 assess;默认扫 goal home
@@ -29,10 +31,18 @@ node <scripts>/goal.mjs list [--root <dir>] [--json]     # 只读,不触发 asse
 
 ### 建目标
 
-1. `init --goal-id <id>` 在 goal home 搭骨架(已存在 goal.yaml 会拒绝覆盖)。home 是新建的话,建议用户顺手 `git init` + 私有远端——异地备份 + 跨设备同步(`state/` 可进 .gitignore,它可再生);多设备使用纪律:开练前 pull,练完 push。
-2. **陪用户起草 topics**:问清楚这个目标真正考什么(内容领域)、哪些横切行为也算数(如 communication,标 `cross_cutting: true`)。weight/critical 是用户的决策——你起草,**用户确认后生效**。
-3. 检查 `graders/communication-v1.yaml` 模板是否贴合,不贴合陪用户改(生效前可自由改;一经 grading 引用即不可变)。
-4. 交接:制题去 **task-forge**(没有题,一切都测不了)。
+1. `init --goal-id <id>` 在 goal home 搭骨架(已存在 goal.yaml 会拒绝覆盖)。
+2. **git 引导闭环(ADR-0011)**:检测 home 非 git 仓库 → 陪用户当场做完,用户只需确认:
+   - `git init` + 写 `.gitignore`(内容:各 workspace 的 `state/`——它可再生)+ 首次 commit;
+   - 有 `gh` CLI → `gh repo create <name> --private --source . --push` 一步建私有远端;没有 → 告知用户远端可以后补(`git remote add origin ... && git push -u origin main`),本地先用不耗事。
+   - 用户明确拒绝则尊重——单机使用完全合法,同步是可选增强。
+3. **陪用户起草 topics**:问清楚这个目标真正考什么(内容领域)、哪些横切行为也算数(如 communication,标 `cross_cutting: true`)。weight/critical 是用户的决策——你起草,**用户确认后生效**。
+4. 检查 `graders/communication-v1.yaml` 模板是否贴合,不贴合陪用户改(生效前可自由改;一经 grading 引用即不可变)。
+5. 交接:制题去 **task-forge**(没有题,一切都测不了)。
+
+### 换机 / 新设备接入
+
+用户说"我在另一台电脑有数据"或新机首次使用时:问到远端地址 → `git clone <repo> ~/goal-optimizer`(或 `$GOAL_OPTIMIZER_HOME` 指向的位置)→ 即刻可用,无需其他步骤。提醒:多设备交替使用时,各 skill 会话自动 pull/push;若 pull 报冲突,先解决再练。
 
 ### 修订 topics
 
