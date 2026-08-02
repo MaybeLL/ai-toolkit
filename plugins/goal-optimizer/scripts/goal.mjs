@@ -15,7 +15,7 @@
 // - state/plan.json is a DECISION artifact written by `next --write`, outside INV-2.
 // - No LLM here (INV-5): the CLI validates and computes; agents judge meaning.
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync, appendFileSync, readdirSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync, appendFileSync, readdirSync, realpathSync } from "node:fs";
 import { join, resolve, basename } from "node:path";
 import { homedir } from "node:os";
 import { createHash } from "node:crypto";
@@ -257,7 +257,13 @@ function gitDebt() {
   const top = git(home, ["rev-parse", "--show-toplevel"]);
   if (!top.ok) return null;
   const root = top.out;
-  if (resolve(root) !== resolve(home)) return null;
+  // realpath both sides: on macOS /tmp → /private/tmp, and git reports the
+  // physical path while resolveHome() may hold the symlinked one.
+  try {
+    if (realpathSync(root) !== realpathSync(home)) return null;
+  } catch {
+    return null;
+  }
   const dirty = git(root, ["status", "--porcelain"]);
   const dirtyCount = dirty.ok && dirty.out ? dirty.out.split("\n").length : 0;
   const upstream = git(root, ["rev-parse", "--abbrev-ref", "@{u}"]);
