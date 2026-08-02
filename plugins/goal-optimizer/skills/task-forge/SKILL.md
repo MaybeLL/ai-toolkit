@@ -1,6 +1,6 @@
 ---
 name: task-forge
-description: 制题(M2):按缺口出题、导入用户上传的题目素材、把真实面试 transcript 归一化为 imported-live task、修订 task/common grader(开新版)、参考答案质检。当用户想出新题、贴来一道面试真题、想把一场已发生的真实面试入库(先归一化)、或要改评分标准时使用。出完题不主持(那是 goal-drill)、不打分(那是 goal-grade)。
+description: 制题(M2):按缺口出题、导入用户上传的题目素材、从工作收获/学习笔记等任意材料抽取 task、把真实面试 transcript 归一化为 imported-live task、修订 task/common grader(开新版)、参考答案质检。当用户想出新题、贴来一道面试真题、想把一段值得沉淀的知识/经验变成可练习的题、想把一场已发生的真实面试入库(先归一化)、或要改评分标准时使用。出完题不主持(那是 goal-drill)、不打分(那是 goal-grade)。
 ---
 
 # Task Forge(制题:题面 + 预注册 grader)
@@ -58,6 +58,18 @@ reference_solution: |
 ### 导入(imported)
 
 用户贴题面 → 你按词表标 labels、定 difficulty、起草 checks → **用户确认 grader** → 入库。确认必须发生在用户作答之前(预注册)。
+
+### 材料抽题(imported 的变体:输入不是题面)
+
+用户给的不是题,而是一段**值得沉淀的材料**——工作中踩过的坑、学习笔记里的精彩段落、一次技术讨论的结论。抽题流程:
+
+1. **提炼考点**:这段材料真正考验的能力是什么?强者和弱者在这个点上会留下什么不同行为?(不是"背出这段话",而是"在新场景里用出这个判断")
+2. **反推题面**:设计一个能自然诱出该考点的任务场景——优先选与材料原场景**不同**的业务背景(考迁移,不考复述);若考点属于已有题系的变式,标 `variant_of`。
+3. **材料入 checks**:材料里的关键判断("必须区分 X 与 Y""边界在 Z")提炼成可指认的 check;材料本身可作为 reference_solution 的骨架。
+4. label 不在词表时提醒用户:这可能是个新 topic,去 goal-define 加词(顺便定 weight)。
+5. 后续同 imported:用户确认 grader → 入库。origin 仍是 `imported`(预注册性质相同:题在作答前存在)。
+
+这条路径是系统的低门槛进食口:材料随时可以抛进来变成题,哪天想练再练。
 
 ### 归一化(imported-live)
 

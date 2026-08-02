@@ -13,6 +13,7 @@ description: 施测(M3):从题库取题主持一场模拟面试/练习,产出逐
 
 ```
 node <scripts>/goal.mjs task show <ref|family> --workspace <ws> --prompt-only   # 只取题面
+node <scripts>/goal.mjs exam --workspace <ws> [--size N]                        # 组一场整卷(ADR-0009)
 node <scripts>/goal.mjs record --workspace <ws> --task <task_ref> \
      --type <mock_interview|practice|real_interview> --occurred-at <ISO> \
      [--session <场次id>] [--duration <实际耗时min>] \
@@ -25,7 +26,10 @@ record 不接受 `--novelty`(引擎按题系历史派生)、不接受 `--difficu
 
 ## 流程
 
-1. **取题**:用户指定 task_ref,或从 `state/plan.json`(goal-review 产出)拿推荐。**只用 `--prompt-only`**——你是主持人,看了 checks 会无意识朝检查点引导(teaching-to-test,SPEC §7)。
+1. **取题**:
+   - 单题练习:用户指定 task_ref,或从 `state/plan.json`(goal-review 产出)拿推荐。
+   - **整场模拟(ADR-0009)**:`exam --size N` 拿确定性卷面(按 topic 权重轮转、优先未做过的 unseen/variant 题)与建议 session_id;卷面只是建议,用户可调整。按卷面顺序主持,全场共享 session_id。
+   - 不论哪种,**只用 `--prompt-only`**——你是主持人,看了 checks 会无意识朝检查点引导(teaching-to-test,SPEC §7)。注意 `exam` 输出不含 checks,可安全使用。
 2. **主持**:按题面出题;像真实面试官那样追问,但**不评价、不提示、不教学**(除非用户明确要求提示——那要如实记 `--hints true`)。同场多题共享一个 `--session`。
 3. **存稿**:逐字、中立的 transcript 写入 `transcripts/<日期>-<题系>.md`。只记发生了什么,不写任何评语——评价属于 grading 层。
 4. **入库**:立即 `record`。conditions 如实填(是否限时/提示/查资料)。真实面试(用户贴稿,题已由 task-forge 归一化)也走这里,`--type real_interview`。

@@ -355,7 +355,7 @@ stale    = 曾健康、现仅因 recency 失格 → 只标注,不排复测(ADR-0
 ## 6. 命令契约
 
 写入侧(只追加事实):`task add → record → grade`;纠错:`retract`。
-读取侧(读派生视图):`assess → explain → next`;跨目标:`list`。
+读取侧(读派生视图):`assess → explain → next`;组卷:`exam`;跨目标:`list`。
 
 **assess 与摄取解耦**(继承 v0.1):record/grade 一提交事实即安全;assess 是全量读模型刷新,读取前懒触发或一批摄取后统一跑;失败绝不影响已落地事实。
 
@@ -387,7 +387,11 @@ stale    = 曾健康、现仅因 recency 失格 → 只标注,不排复测(ADR-0
 
 选题器。`next`(打印):确定性输出 priority 短名单 + 每 topic 候选题(suite 内未做、优先 unseen/variant;无题则 `forge_needed`)。`next --write`:Agent 包装成至多 3 条 action(CLI 校验 task_ref 存在、topic 在词表、reason 非空)写入 plan.json。
 
-### 6.8 `goal retract <trial_id> --reason <text>` / `goal list --root <dir>`
+### 6.8 `goal exam [--size N]`
+
+组卷器(ADR-0009):确定性组一场整卷模拟面试。按 topic weight 降序轮转取题,每 topic 优先未尝试题系(would-be unseen/variant),跨 topic 去重;输出卷面(task_ref/topic/would_be_novelty)、建议 session_id、无题可选的 topic(forge_needed)。纯读、无 LLM、不写文件;与 next 的分工:next 答"单点练什么"(补最弱),exam 答"整场考什么"(加权覆盖)。消费方为 goal-drill 的整场模拟流程。
+
+### 6.9 `goal retract <trial_id> --reason <text>` / `goal list --root <dir>`
 
 同 v0.1 语义:retract 追加撤销;list 跨目标只读总览(critical 不健康置顶,不触发 assess),另报告各目标待打分存货与覆盖盲区。
 
@@ -400,7 +404,7 @@ stale    = 曾健康、现仅因 recency 失格 → 只标注,不排复测(ADR-0
 | Skill | 活动 | 模块 |
 |---|---|---|
 | **goal-define** | 定标:topics(weight/critical)起草与修订、词表治理;跨目标 list | M1 |
-| **task-forge** | 制题:按缺口出题 / 用户素材导入 / imported-live 归一化 / grader(含 common)修订 / 参考答案质检 | M2 |
+| **task-forge** | 制题:按缺口出题 / 用户素材导入 / 任意材料抽题(工作收获→task) / imported-live 归一化 / grader(含 common)修订 / 参考答案质检 | M2 |
 | **goal-drill** | 施测:取题(`--prompt-only`)→ 主持面试 → 产 transcript → **顺手 record** → spawn 盲判子代理,按 session 粒度反馈(ADR-0008) | M3 |
 | **goal-grade** | 判定:fresh context 盲判,逐 check 独立;默认作为 drill 的子代理即时执行,独立会话消存货/重判为兜底;含 retract 支线 | M4 |
 | **goal-review** | 复盘:assess → explain → next;stale 与存货提醒 | M6 |

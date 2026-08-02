@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // goal-optimizer CLI v2 — deterministic core for the task-centric model (spec-v0.2).
-// Subcommands: init | list | task | grader | record | retract | grade | assess | explain | next
+// Subcommands: init | list | task | grader | record | retract | grade | assess | explain | next | exam
 //
 // Design notes (docs/SPEC.md, docs/adr/):
 // - Facts (transcripts/, data/trials.jsonl, data/gradings.jsonl) are append-only
@@ -1150,6 +1150,84 @@ function cmdNext(flags) {
 }
 
 // ---------------------------------------------------------------------------
+// exam — deterministic mock-exam composer (ADR-0009). Read-only, no LLM.
+// next answers "what single thing to practice"; exam answers "what a full
+// weighted-coverage mock should contain".
+// ---------------------------------------------------------------------------
+function cmdExam(flags) {
+  const wsDir = ws(flags);
+  const m = computeModel(wsDir, flags);
+  const size = Number(flags.size ?? 4);
+
+  const attemptCount = new Map(); // family → active trial count
+  for (const t of m.active) {
+    const fam = splitRef(t.task_ref)?.family;
+    attemptCount.set(fam, (attemptCount.get(fam) ?? 0) + 1);
+  }
+
+  // 1. content topics by weight desc (tie: id)
+  const topicIds = [...m.vocab.values()]
+    .filter((t) => !t.cross_cutting)
+    .sort((a, b) => (b.weight !== a.weight ? b.weight - a.weight : a.id.localeCompare(b.id)))
+    .map((t) => t.id);
+
+  // 2. per-topic candidate queues: unattempted families first (unseen/variant),
+  //    fallback = least-attempted; deterministic name tiebreak.
+  const queues = new Map();
+  const forgeNeeded = [];
+  for (const id of topicIds) {
+    const suite = m.topics[id].coverage.suite; // sorted family names
+    if (suite.length === 0) {
+      forgeNeeded.push(id);
+      queues.set(id, []);
+      continue;
+    }
+    const unattempted = suite.filter((f) => !(attemptCount.get(f) > 0)).sort();
+    const fallback = suite
+      .filter((f) => attemptCount.get(f) > 0)
+      .sort((a, b) => (attemptCount.get(a) !== attemptCount.get(b) ? attemptCount.get(a) - attemptCount.get(b) : a.localeCompare(b)));
+    queues.set(id, [...unattempted, ...fallback]);
+  }
+
+  // 3. round-robin across topics, dedupe families (a task may carry 2 labels)
+  const paper = [];
+  const used = new Set();
+  let progressed = true;
+  while (paper.length < size && progressed) {
+    progressed = false;
+    for (const id of topicIds) {
+      if (paper.length >= size) break;
+      const q = queues.get(id);
+      while (q.length > 0) {
+        const fam = q.shift();
+        if (used.has(fam)) continue;
+        used.add(fam);
+        const doc = m.latestTasks.get(fam);
+        const attempted = attemptCount.get(fam) > 0;
+        const wouldBe = attempted
+          ? "familiar/repeat"
+          : doc?.variant_of && attemptCount.get(String(doc.variant_of)) > 0
+            ? "variant"
+            : "unseen";
+        paper.push({ seq: paper.length + 1, task_ref: doc._ref, topic: id, difficulty: doc.difficulty, would_be_novelty: wouldBe });
+        progressed = true;
+        break;
+      }
+    }
+  }
+
+  const out = {
+    as_of: m.nowISO,
+    size_requested: size,
+    session_id: `ses-exam-${m.nowISO.slice(0, 10)}`,
+    paper,
+    ...(forgeNeeded.length > 0 ? { forge_needed: forgeNeeded } : {}),
+    ...(paper.length < size ? { note: `task bank exhausted at ${paper.length} task(s); forge more to fill the paper` } : {}),
+  };
+  process.stdout.write(JSON.stringify(out, null, 2) + "\n");
+}
+
+// ---------------------------------------------------------------------------
 // list — cross-goal read-only overview (M1). Never triggers assess.
 // ---------------------------------------------------------------------------
 function summarizeGoal(wsDir) {
@@ -1287,9 +1365,12 @@ switch (sub) {
   case "next":
     cmdNext(flags);
     break;
+  case "exam":
+    cmdExam(flags);
+    break;
   default:
     die(
       `unknown subcommand: ${sub ?? "(none)"}\n` +
-        `usage: goal.mjs <init|list|task|grader|record|retract|grade|assess|explain|next> --workspace <dir> ...`
+        `usage: goal.mjs <init|list|task|grader|record|retract|grade|assess|explain|next|exam> --workspace <dir> ...`
     );
 }
