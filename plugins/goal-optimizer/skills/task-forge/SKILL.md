@@ -19,7 +19,7 @@ description: 制题(M2):按缺口出题、导入用户上传的题目素材、�
 
 `<scripts>` = 本 SKILL.md 上两级的 `scripts/` 目录。
 
-**workspace 解析(ADR-0010)**:数据住在 goal home(默认 `~/goal-optimizer/`,可由 `GOAL_OPTIMIZER_HOME` 或 `~/.goal-optimizer/config.json` 的 `root` 改),与用户当前所在的项目仓库无关——在任何目录都可直接使用,不要求用户提供数据路径。CLI 自动选中唯一目标;多目标时加 `--goal <id>`(或 config 设 `default_goal`);`--workspace <dir>` 仅作显式覆盖(如示例 workspace)。
+**数据位置(ADR-0010)**:数据住在 goal home——用户唯一需要关心的位置开关是 `GOAL_OPTIMIZER_HOME` 环境变量(不设则默认 `~/goal-optimizer/`)。与当前所在项目仓库无关,任何目录直接使用,不需要任何路径参数。CLI 自动选中唯一目标;多目标时加 `--goal <id>`(或 `~/.goal-optimizer/config.json` 设 `default_goal`)。
 
 ```
 node <scripts>/goal.mjs task add --file <task.yaml>    # 也接受 stdin

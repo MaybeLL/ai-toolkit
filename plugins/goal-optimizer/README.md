@@ -82,11 +82,15 @@ A complete example workspace lives at
 
 ```sh
 cd plugins/goal-optimizer/scripts
-WS=../examples/backend-system-design
-node goal.mjs explain idempotency --workspace "$WS"
+export GOAL_OPTIMIZER_HOME=../examples/backend-system-design
+node goal.mjs explain idempotency
 # recompute from facts and confirm it's byte-identical:
-rm -rf "$WS/state" && node goal.mjs assess --workspace "$WS"
+rm -rf "$GOAL_OPTIMIZER_HOME/state" && node goal.mjs assess
 ```
+
+Your own data lives in the **goal home** — the only location knob is the
+`GOAL_OPTIMIZER_HOME` env var (default `~/goal-optimizer/`). Skills work from any
+cwd in any project repo; data never lands in the current project.
 
 See [`docs/SPEC.md`](../../docs/SPEC.md) for the full data contract, estimator formulas,
 and command semantics; design decisions live in [`docs/adr/`](../../docs/adr/).

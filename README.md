@@ -121,15 +121,15 @@ claude plugin install productivity@maybell-plugins
 
 ```bash
 cd plugins/goal-optimizer/scripts
-WS=../examples/backend-system-design
-node goal.mjs explain idempotency --workspace "$WS"
+export GOAL_OPTIMIZER_HOME=../examples/backend-system-design
+node goal.mjs explain idempotency
 # 从事实重算,验证逐字节一致(INV-2):
-rm -rf "$WS/state" && node goal.mjs assess --workspace "$WS"
+rm -rf "$GOAL_OPTIMIZER_HOME/state" && node goal.mjs assess
 ```
 
 ## 卸载
 
-数据由用户自持(就在你指定的 workspace 目录里),卸载插件不会删除任何目标数据。
+数据由用户自持(住在 goal home:`GOAL_OPTIMIZER_HOME` 或默认 `~/goal-optimizer/`),卸载插件不会删除任何目标数据。
 
 - Codex:`codex plugin remove goal-optimizer@maybell-plugins` 与 `codex plugin remove productivity@maybell-plugins`
 - Claude Code:`claude plugin uninstall goal-optimizer@maybell-plugins` 与 `claude plugin uninstall productivity@maybell-plugins`

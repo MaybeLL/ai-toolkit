@@ -183,9 +183,11 @@ function loadYaml(text) {
 // ---------------------------------------------------------------------------
 // workspace / io helpers
 // ---------------------------------------------------------------------------
-// goal home resolution (ADR-0010): data lives in one user-level directory, so
-// skills work from any cwd (any project repo) without a data path. Resolution
-// affects only which directory we read — never any computation (INV-2 safe).
+// goal home resolution (ADR-0010, simplified): data lives in one user-level
+// directory — GOAL_OPTIMIZER_HOME, else ~/.goal-optimizer/config.json root,
+// else ~/goal-optimizer/. That's the only location knob users ever touch;
+// skills work from any cwd. Resolution affects only which directory we read —
+// never any computation (INV-2 safe).
 function expandTilde(p) {
   return p.replace(/^~(?=\/|$)/, homedir());
 }
@@ -196,8 +198,7 @@ function loadUserConfig() {
     return {};
   }
 }
-function resolveHome(flags) {
-  if (flags.root) return resolve(expandTilde(String(flags.root)));
+function resolveHome() {
   if (process.env.GOAL_OPTIMIZER_HOME) return resolve(expandTilde(process.env.GOAL_OPTIMIZER_HOME));
   const cfg = loadUserConfig();
   if (cfg.root) return resolve(expandTilde(String(cfg.root)));
@@ -211,19 +212,13 @@ function listGoalsUnder(root) {
     .sort();
 }
 function ws(flags) {
-  const dir = flags.workspace || flags.w;
-  if (dir) {
-    const abs = resolve(expandTilde(String(dir)));
-    if (!existsSync(abs)) die(`workspace not found: ${abs}`);
-    return abs;
-  }
-  const root = resolveHome(flags);
+  const root = resolveHome();
   if (existsSync(join(root, "goal.yaml"))) return root; // home itself is a single workspace
   const goals = listGoalsUnder(root);
   if (goals.length === 0)
     die(
       `no goal found under ${root}\n` +
-        `Create one first: goal.mjs init --goal-id <id>  (or point elsewhere with --workspace / GOAL_OPTIMIZER_HOME)`
+        `Create one first: goal.mjs init --goal-id <id>  (or point GOAL_OPTIMIZER_HOME at your data)`
     );
   const cfg = loadUserConfig();
   const goalId = flags.goal ? String(flags.goal) : goals.length === 1 ? goals[0] : cfg.default_goal ? String(cfg.default_goal) : null;
@@ -671,17 +666,10 @@ checks:
 }
 
 function cmdInit(positional, flags) {
-  // ADR-0010: default to <goal home>/<goal-id> so init works from any cwd.
-  let abs;
-  const explicit = flags.workspace || flags.w || positional[0];
-  const goalIdArg = flags["goal-id"] ? String(flags["goal-id"]) : null;
-  if (explicit) {
-    abs = resolve(expandTilde(String(explicit)));
-  } else {
-    if (!goalIdArg) die("usage: init --goal-id <id> [--title <t>] [--created-at <YYYY-MM-DD>]   (or explicit --workspace <dir>)");
-    abs = join(resolveHome(flags), goalIdArg);
-  }
-  const goalId = goalIdArg ?? basename(abs);
+  // ADR-0010: workspaces always live at <goal home>/<goal-id>.
+  const goalId = flags["goal-id"] ? String(flags["goal-id"]) : positional[0] ? String(positional[0]) : null;
+  if (!goalId) die("usage: init --goal-id <id> [--title <t>] [--created-at <YYYY-MM-DD>]");
+  const abs = join(resolveHome(), goalId);
   const title = flags.title ? String(flags.title) : goalId;
   const createdAt = flags["created-at"] ? String(flags["created-at"]) : new Date().toISOString().slice(0, 10);
 
@@ -1325,10 +1313,9 @@ function summarizeGoal(wsDir) {
 }
 
 function cmdList(positional, flags) {
-  // ADR-0010: --root defaults to the resolved goal home.
-  const root = flags.root || flags.workspace || flags.w || positional[0];
-  const rootAbs = root ? resolve(expandTilde(String(root))) : resolveHome(flags);
-  if (!existsSync(rootAbs)) die(`directory not found: ${rootAbs}`);
+  // ADR-0010: always scans the resolved goal home.
+  const rootAbs = resolveHome();
+  if (!existsSync(rootAbs)) die(`goal home not found: ${rootAbs} (set GOAL_OPTIMIZER_HOME or run init first)`);
 
   const wsDirs = [];
   if (existsSync(join(rootAbs, "goal.yaml"))) wsDirs.push(rootAbs);
@@ -1367,7 +1354,7 @@ function cmdList(positional, flags) {
       meta.push(`target ${g.target_date}${Number.isFinite(dleft) ? ` (${dleft}d left)` : ""}`);
     }
     if (!g.assessed) {
-      L.push(`    (unassessed — run: goal.mjs assess --workspace ${g.workspace})`);
+      L.push(`    (unassessed — run: goal.mjs assess --goal ${g.goal_id})`);
       if (meta.length) L.push(`    ${meta.join("   ")}`);
       continue;
     }
@@ -1429,6 +1416,6 @@ switch (sub) {
   default:
     die(
       `unknown subcommand: ${sub ?? "(none)"}\n` +
-        `usage: goal.mjs <init|list|task|grader|record|retract|grade|assess|explain|next|exam> --workspace <dir> ...`
+        `usage: goal.mjs <init|list|task|grader|record|retract|grade|assess|explain|next|exam> [--goal <id>] ...`
     );
 }

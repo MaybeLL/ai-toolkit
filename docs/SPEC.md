@@ -52,7 +52,7 @@
 
 ## 3. Workspace 布局
 
-每个目标一个独立目录,集中存于 **goal home**(ADR-0010):默认 `~/goal-optimizer/`,可由 `GOAL_OPTIMIZER_HOME` 环境变量或 `~/.goal-optimizer/config.json` 的 `root` 改。CLI 从任意 cwd 自动解析(多目标用 `--goal <id>` 选择,单目标自动选中);`--workspace <dir>` 仅作显式覆盖。数据位置与使用位置解耦:用户在任何项目仓库里都能直接使用,数据永不落入当前项目;git 同步只发生在 goal home。
+每个目标一个独立目录,集中存于 **goal home**(ADR-0010)。用户唯一需要关心的位置开关是 `GOAL_OPTIMIZER_HOME` 环境变量(不设则默认 `~/goal-optimizer/`;也可在 `~/.goal-optimizer/config.json` 设 `root`)。CLI 从任意 cwd 自动解析:单目标自动选中,多目标用 `--goal <id>`(或 config 设 `default_goal`)。数据位置与使用位置解耦:用户在任何项目仓库里都能直接使用,数据永不落入当前项目;git 同步只发生在 goal home。
 
 ```
 <workspace>/
@@ -361,7 +361,7 @@ stale    = 曾健康、现仅因 recency 失格 → 只标注,不排复测(ADR-0
 
 ### 6.1 `goal init --goal-id <id>`
 
-建骨架:默认在 `<goal home>/<goal-id>` 建 workspace(`--workspace` 可显式指定位置):`tasks/ graders/ transcripts/ data/` + `goal.yaml` 模板(含中立占位 topic)。已存在 `goal.yaml` 拒绝覆盖。Agent 随后陪用户起草真实 topics(用户确认生效)。
+建骨架:在 `<goal home>/<goal-id>` 建 workspace:`tasks/ graders/ transcripts/ data/` + `goal.yaml` 模板(含中立占位 topic)。已存在 `goal.yaml` 拒绝覆盖。Agent 随后陪用户起草真实 topics(用户确认生效)。
 
 ### 6.2 `goal task add [--stdin]`
 

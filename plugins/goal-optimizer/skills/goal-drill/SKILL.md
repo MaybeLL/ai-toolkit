@@ -11,7 +11,7 @@ description: 施测(M3):从题库取题主持一场模拟面试/练习,产出逐
 
 `<scripts>` = 本 SKILL.md 上两级的 `scripts/` 目录。
 
-**workspace 解析(ADR-0010)**:数据住在 goal home(默认 `~/goal-optimizer/`,可由 `GOAL_OPTIMIZER_HOME` 或 `~/.goal-optimizer/config.json` 的 `root` 改),与用户当前所在的项目仓库无关——在任何目录都可直接使用,不要求用户提供数据路径。CLI 自动选中唯一目标;多目标时加 `--goal <id>`(或 config 设 `default_goal`);`--workspace <dir>` 仅作显式覆盖(如示例 workspace)。
+**数据位置(ADR-0010)**:数据住在 goal home——用户唯一需要关心的位置开关是 `GOAL_OPTIMIZER_HOME` 环境变量(不设则默认 `~/goal-optimizer/`)。与当前所在项目仓库无关,任何目录直接使用,不需要任何路径参数。CLI 自动选中唯一目标;多目标时加 `--goal <id>`(或 `~/.goal-optimizer/config.json` 设 `default_goal`)。
 
 ```
 node <scripts>/goal.mjs task show <ref|family> --prompt-only   # 只取题面
@@ -35,7 +35,7 @@ record 不接受 `--novelty`(引擎按题系历史派生)、不接受 `--difficu
 2. **主持**:按题面出题;像真实面试官那样追问,但**不评价、不提示、不教学**(除非用户明确要求提示——那要如实记 `--hints true`)。同场多题共享一个 `--session`。
 3. **存稿**:逐字、中立的 transcript 写入 `transcripts/<日期>-<题系>.md`。只记发生了什么,不写任何评语——评价属于 grading 层。
 4. **入库**:立即 `record`。conditions 如实填(是否限时/提示/查资料)。真实面试(用户贴稿,题已由 task-forge 归一化)也走这里,`--type real_interview`。
-5. **即时盲判(ADR-0008)**:record 后 spawn 一个 **fresh-context 子代理**执行 goal-grade,**只传 trial_id 与 workspace 路径**——不传你对这场面试的任何印象、评语、摘要(trial_id 是不携带判断的指针;子代理自行从 CLI 打印模式取冻结材料)。无法 spawn 子代理时退回旧路径:告知用户换新会话跑 goal-grade。
+5. **即时盲判(ADR-0008)**:record 后 spawn 一个 **fresh-context 子代理**执行 goal-grade,**只传 trial_id**——不传你对这场面试的任何印象、评语、摘要(trial_id 是不携带判断的指针;子代理自行从 CLI 打印模式取冻结材料,数据位置由 goal home 自动解析)。无法 spawn 子代理时退回旧路径:告知用户换新会话跑 goal-grade。
 6. **按 session 粒度反馈**:
    - 单题练习 → 子代理返回后跑 `assess`,当场给反馈(哪些 check 过/未过 + 行号出处;深度复盘引导去 goal-review)。
    - 多题模拟面试 → 每题结束即可并行 spawn 判定,但**展示推迟到全场散场后**统一给——中途报分会让你无意识照顾弱点、也打断用户的面试状态(真实面试同样不会中途告知分数)。**散场前不读任何已落库的 grading。**
@@ -49,4 +49,4 @@ record 不接受 `--novelty`(引擎按题系历史派生)、不接受 `--difficu
 - 绝不 `task show` 全量(只许 `--prompt-only`)。
 - transcript 中不夹带你的评价。
 - 本会话永不自行执行 grade 的判定步骤——你主持过面试,已被污染;只能 spawn fresh-context 子代理去判(反锚定靠上下文隔离,不靠时间隔离,ADR-0008)。
-- spawn 时只传 trial_id/workspace,不传印象;多题场次散场前不披露任何判定结果。
+- spawn 时只传 trial_id,不传印象;多题场次散场前不披露任何判定结果。
