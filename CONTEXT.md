@@ -12,7 +12,7 @@
 见 ADR-0005。
 
 ### Topic
-goal.yaml 中声明的一个内容领域或横切行为(如 idempotency、caching、communication),带 weight(相对重要度)与可选 critical。topics 清单同时是 **label 权威词表**(治理开放词汇,防同义漂移)。取代 requirement 成为定标单元。
+goal.yaml 中声明的一个内容领域或横切行为(如 idempotency、caching、communication),带 weight(相对重要度;critical 字段已废除,见 ADR-0012)。topics 清单同时是 **label 权威词表**(治理开放词汇,防同义漂移)。取代 requirement 成为定标单元。
 
 ### Label
 task 与 common grader 上的 topic 引用。task 级 label 标内容(题是关于什么的);common grader 自带 label 标横切行为。聚合时按 label 分组 grading。

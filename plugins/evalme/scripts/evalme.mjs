@@ -300,7 +300,6 @@ function topicVocab(goal) {
     map.set(String(t.id), {
       id: String(t.id),
       weight: t.weight !== undefined ? Number(t.weight) : 0.5,
-      critical: Boolean(t.critical),
       cross_cutting: Boolean(t.cross_cutting),
     });
   }
@@ -625,7 +624,6 @@ function computeModel(wsDir, flags = {}) {
       band: tu.length === 0 ? null : bandOf(scoreInternal),
       confidence,
       weight: t.weight,
-      critical: t.critical,
       cross_cutting: t.cross_cutting,
       healthy,
       deficit,
@@ -681,8 +679,7 @@ target_date:            # 可选,YYYY-MM-DD
 topics:
   # 占位示例,请替换成你的真实 topic:
   - id: example-topic
-    weight: 0.9              # 相对重要度(排序用,不装测量)
-    critical: true           # 门槛项:不健康则目标整体不达标
+    weight: 0.9              # 相对重要度(排序用,不装测量;建议 0.1 步长)
   - id: communication
     weight: 0.5
     cross_cutting: true      # 横切行为:由 common grader 产生证据,不做题目内容
@@ -728,7 +725,7 @@ function cmdInit(positional, flags) {
 
   process.stdout.write(
     `initialized workspace at ${abs}\n` +
-      `  goal.yaml                      填写真实 topics(weight/critical/cross_cutting)\n` +
+      `  goal.yaml                      填写真实 topics(weight/cross_cutting)\n` +
       `  graders/communication-v1.yaml  横切 common grader 模板,按需修改后生效\n` +
       `  tasks/                         题库(task add 入库)\n` +
       `  transcripts/                   逐字稿(record 时引用)\n` +
@@ -1080,7 +1077,7 @@ function cmdExplain(positional, flags) {
   for (const u of t._internal.units) verifyTranscripts(wsDir, u.trial);
 
   const L = [];
-  L.push(`topic  ${topicId}${t.critical ? "  (critical)" : ""}${t.cross_cutting ? "  (cross-cutting)" : ""}`);
+  L.push(`topic  ${topicId}${t.cross_cutting ? "  (cross-cutting)" : ""}`);
   L.push(
     `状态   band ${t.band ?? "—"}   confidence ${t.confidence}   ${t.healthy ? "✓ healthy" : `✗ deficit ${t.deficit}`}   mode ${t.mode}${t.stale ? "   ⚠ stale(距上次验证已久)" : ""}`
   );
@@ -1163,7 +1160,6 @@ function cmdNext(flags) {
       .sort((a, b) => {
         const A = m.topics[a],
           B = m.topics[b];
-        if (A.critical !== B.critical) return A.critical ? -1 : 1;
         if (B.priority !== A.priority) return B.priority - A.priority;
         return a.localeCompare(b);
       })
@@ -1186,7 +1182,6 @@ function cmdNext(flags) {
           priority: t.priority,
           mode: t.mode,
           deficit: t.deficit,
-          critical: t.critical,
           cross_cutting: t.cross_cutting,
           stale: t.stale,
           candidates,
@@ -1329,16 +1324,14 @@ function summarizeGoal(wsDir) {
   };
   const healthPath = join(wsDir, "state", "health.json");
   if (!existsSync(healthPath)) {
-    return { ...base, assessed: false, as_of: null, unhealthy: 0, critical_unhealthy: 0, top: null, pending_grading: 0 };
+    return { ...base, assessed: false, as_of: null, unhealthy: 0, top: null, pending_grading: 0 };
   }
   const health = JSON.parse(readFileSync(healthPath, "utf8"));
   const indexPath = join(wsDir, "state", "task-index.json");
   const pending = existsSync(indexPath) ? (JSON.parse(readFileSync(indexPath, "utf8")).pending_grading ?? []).length : 0;
   const entries = Object.entries(health.topics ?? {});
   const unhealthy = entries.filter(([, t]) => !t.healthy);
-  const criticalUnhealthy = unhealthy.filter(([, t]) => t.critical);
   const sorted = [...unhealthy].sort(([a, A], [b, B]) => {
-    if (A.critical !== B.critical) return A.critical ? -1 : 1;
     if (B.priority !== A.priority) return B.priority - A.priority;
     return a.localeCompare(b);
   });
@@ -1348,7 +1341,6 @@ function summarizeGoal(wsDir) {
     assessed: true,
     as_of: health.as_of ?? null,
     unhealthy: unhealthy.length,
-    critical_unhealthy: criticalUnhealthy.length,
     top,
     pending_grading: pending,
   };
@@ -1372,9 +1364,6 @@ function cmdList(positional, flags) {
 
   const goals = wsDirs.map((d) => summarizeGoal(d));
   goals.sort((a, b) => {
-    const ac = a.critical_unhealthy > 0 ? 1 : 0;
-    const bc = b.critical_unhealthy > 0 ? 1 : 0;
-    if (ac !== bc) return bc - ac;
     const ap = a.top ? a.top.priority : -1;
     const bp = b.top ? b.top.priority : -1;
     if (ap !== bp) return bp - ap;
@@ -1402,7 +1391,7 @@ function cmdList(positional, flags) {
     }
     meta.push(`assessed as_of ${g.as_of}`);
     L.push(`    ${meta.join("   ")}`);
-    L.push(`    topics ${g.topics} | unhealthy ${g.unhealthy} | critical unhealthy ${g.critical_unhealthy}${g.pending_grading > 0 ? ` | ⚠ ${g.pending_grading} trial(s) await grading` : ""}`);
+    L.push(`    topics ${g.topics} | unhealthy ${g.unhealthy}${g.pending_grading > 0 ? ` | ⚠ ${g.pending_grading} trial(s) await grading` : ""}`);
     if (g.top) L.push(`    top gap  ${g.top.topic}  priority ${g.top.priority}  [${g.top.mode}]${g.top.stale ? "  ⚠ stale" : ""}`);
     else L.push(`    ✓ all topics healthy`);
   }

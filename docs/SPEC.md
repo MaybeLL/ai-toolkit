@@ -56,7 +56,7 @@
 
 ```
 <workspace>/
-  goal.yaml                     # M1 定标:topics(weight/critical)= 优先级 + label 权威词表
+  goal.yaml                     # M1 定标:topics(weight)= 优先级 + label 权威词表
   tasks/                        # M2 量具:一题一文件,版本化(题系名-v<N>)
     coupon-idempotency-v1.yaml
   graders/                      # M2 量具:common grader(横切行为),独立版本化
@@ -90,8 +90,7 @@ target_date: 2026-10-01            # 可选
 # topics 清单 = 优先级声明 + label 权威词表(ADR-0005)
 topics:
   - id: idempotency
-    weight: 0.9                    # 相对重要度(排序用,不装测量)
-    critical: true                 # 门槛项:不健康则目标整体不达标
+    weight: 0.9                    # 相对重要度(排序用,不装测量;建议 0.1 步长)
   - id: caching
     weight: 0.7
   - id: rate-limiting
@@ -245,7 +244,6 @@ checks:
   "topics": {
     "idempotency": {
       "band": "uneven",
-      "critical": true,
       "coverage": { "tasks_in_suite": 6, "attempted": 4 },
       "by_novelty": {
         "unseen":  { "trials": 3, "passed": 1 },
@@ -278,7 +276,7 @@ checks:
     { "rank": 1,
       "task_ref": "flash-sale-idempotency-v1",
       "topic": "idempotency",
-      "reason": "critical topic;unseen 通过 1/3;本题未做过且为 unseen",
+      "reason": "weight 最高的 topic;unseen 通过 1/3;本题未做过且为 unseen",
       "forge_needed": false }
   ]
 }
@@ -343,7 +341,7 @@ topic 达标不再是"分数 ≥ 分数线",而是可观察的题级事实组合
      ∧ 无未解决的 must_pass 失败
      ∧ 非 stale(confidence 未因 recency 跌破阈值)
 
-priority = weight × 缺口程度 × (0.5 + 0.5 × confidence);critical 置顶
+priority = weight × 缺口程度 × (0.5 + 0.5 × confidence)
 mode     = "diagnose"(confidence < 0.4,先做题探明)| "train"(其余)
 stale    = 曾健康、现仅因 recency 失格 → 只标注,不排复测(ADR-0004)
 ```
@@ -397,7 +395,7 @@ stale    = 曾健康、现仅因 recency 失格 → 只标注,不排复测(ADR-0
 
 ### 6.10 `evalme retract <trial_id> --reason <text>` / `evalme list --root <dir>`
 
-同 v0.1 语义:retract 追加撤销;list 跨目标只读总览(critical 不健康置顶,不触发 assess),另报告各目标待打分存货与覆盖盲区。
+同 v0.1 语义:retract 追加撤销;list 跨目标只读总览(按 top priority 排序,不触发 assess),另报告各目标待打分存货与覆盖盲区。
 
 ---
 
@@ -407,7 +405,7 @@ stale    = 曾健康、现仅因 recency 失格 → 只标注,不排复测(ADR-0
 
 | Skill | 活动 | 模块 |
 |---|---|---|
-| **evalme-define** | 定标:topics(weight/critical)起草与修订、词表治理;跨目标 list | M1 |
+| **evalme-define** | 定标:topics(weight)起草与修订、词表治理;跨目标 list | M1 |
 | **evalme-forge** | 制题:按缺口出题 / 用户素材导入 / 任意材料抽题(工作收获→task) / imported-live 归一化 / grader(含 common)修订 / 参考答案质检 | M2 |
 | **evalme-drill** | 施测:取题(`--prompt-only`)→ 主持面试 → 产 transcript → **顺手 record** → spawn 盲判子代理,按 session 粒度反馈(ADR-0008) | M3 |
 | **evalme-grade** | 判定:fresh context 盲判,逐 check 独立;默认作为 drill 的子代理即时执行,独立会话消存货/重判为兜底;含 retract 支线 | M4 |

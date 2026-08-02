@@ -1,6 +1,6 @@
 ---
 name: evalme-define
-description: 定标(M1):创建/修订目标与 topics 清单(weight/critical/cross_cutting),治理 label 权威词表;跨目标总览(list)。当用户想建一个新目标、调整 topic 优先级、给词表加新词、归档删除目标、或想看所有目标的健康概览时使用。制题归 evalme-forge,施测归 evalme-drill,复盘归 evalme-review。
+description: 定标(M1):创建/修订目标与 topics 清单(weight/cross_cutting),治理 label 权威词表;跨目标总览(list)。当用户想建一个新目标、调整 topic 优先级、给词表加新词、归档删除目标、或想看所有目标的健康概览时使用。制题归 evalme-forge,施测归 evalme-drill,复盘归 evalme-review。
 ---
 
 # EvalMe Define(定标:目标 + topics 词表)
@@ -9,7 +9,7 @@ description: 定标(M1):创建/修订目标与 topics 清单(weight/critical/cro
 
 **topics 清单是两样东西合一(ADR-0005):**
 
-1. **优先级声明** — 每个 topic 的 weight(相对重要度)与 critical(门槛项)。
+1. **优先级声明** — 每个 topic 的 weight(相对重要度,0.1 步长足够;没有 critical 门槛字段——"这项不行是否必挂"的裁决属于复盘时的人,不属于 schema,ADR-0012)。
 2. **label 权威词表** — task 与 common grader 的 label 必须出自此清单;要用新词,先加进清单再 commit。这是防同义漂移(`idempotency` vs `幂等`)的唯一治理点。
 
 **没有数值分数线。** 达标是外延式的(SPEC §5.4):该 topic 下 unseen/variant 题的通过情况 + 覆盖 + 无 must_pass 失败 + 非 stale。不要替用户发明 `required: 0.75` 这类字段。
@@ -36,7 +36,7 @@ node <scripts>/evalme.mjs list [--root <dir>] [--json]     # 只读,不触发 as
    - `git init` + 写 `.gitignore`(内容:各 workspace 的 `state/`——它可再生)+ 首次 commit;
    - 有 `gh` 且已登录 → `gh repo create evalme-data --private --source . --push` 一步建私有远端。**仓库名固定为 `evalme-data`**——它是新设备自动发现的锚点(见"换机"一节),不要改名;没有 gh → 告知远端可后补(`git remote add origin ... && git push -u origin main`),本地先用不耗事。
    - 用户明确拒绝则尊重——单机使用完全合法,同步是可选增强。
-3. **陪用户起草 topics**:问清楚这个目标真正考什么(内容领域)、哪些横切行为也算数(如 communication,标 `cross_cutting: true`)。weight/critical 是用户的决策——你起草,**用户确认后生效**。
+3. **陪用户起草 topics**:问清楚这个目标真正考什么(内容领域)、哪些横切行为也算数(如 communication,标 `cross_cutting: true`)。weight 是用户的决策——你起草,**用户确认后生效**。
 4. 检查 `graders/communication-v1.yaml` 模板是否贴合,不贴合陪用户改(生效前可自由改;一经 grading 引用即不可变)。
 5. 交接:制题去 **evalme-forge**(没有题,一切都测不了)。
 
@@ -64,5 +64,5 @@ node <scripts>/evalme.mjs list [--root <dir>] [--json]     # 只读,不触发 as
 
 ## 红线
 
-- 不代填 weight/critical——起草可以,定稿必须用户确认。
+- 不代填 weight——起草可以,定稿必须用户确认。
 - `list` 是只读的,展示的是最近一次 assess 的结果,可能滞后;要最新数值让用户走 evalme-review。

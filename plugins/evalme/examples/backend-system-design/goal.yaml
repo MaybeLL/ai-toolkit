@@ -8,7 +8,6 @@ target_date: 2026-10-01
 topics:
   - id: idempotency
     weight: 0.9
-    critical: true
   - id: communication
     weight: 0.5
     cross_cutting: true      # 横切行为:由 common grader 产生证据

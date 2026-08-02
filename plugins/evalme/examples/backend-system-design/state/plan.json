@@ -6,7 +6,7 @@
       "rank": 1,
       "topic": "idempotency",
       "forge_needed": true,
-      "reason": "critical topic;unseen 1/2 过、variant 0/1 过,缺口集中在'无提示迁移到陌生业务'(payment c3 fail、flash-sale c2 fail)。题库 3 题系已全部尝试,需 forge 一道新的陌生业务幂等题(如优惠券/消息投递)检验键粒度设计"
+      "reason": "weight 最高的 topic;unseen 1/2 过、variant 0/1 过,缺口集中在'无提示迁移到陌生业务'(payment c3 fail、flash-sale c2 fail)。题库 3 题系已全部尝试,需 forge 一道新的陌生业务幂等题(如优惠券/消息投递)检验键粒度设计"
     }
   ]
 }

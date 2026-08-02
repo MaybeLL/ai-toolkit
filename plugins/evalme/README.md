@@ -18,7 +18,7 @@ topics      task +       transcript     per-check        assess → explain → 
 词表        grader       + trial        blind verdicts   健康度   证据链    选题
 ```
 
-- **evalme-define** (M1) — draft the goal's `topics` list: relative weights, critical
+- **evalme-define** (M1) — draft the goal's `topics` list: relative weights and
   flags, and the authoritative label vocabulary. No numeric score lines: passing is
   extensional (recent pass rate on unseen/variant tasks), not "reach 0.75".
 - **evalme-forge** (M2) — build the task bank. Each task = prompt + **preregistered

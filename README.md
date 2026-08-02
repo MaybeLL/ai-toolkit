@@ -17,7 +17,7 @@ evalme-define → evalme-forge  →  evalme-drill  →  evalme-grade  →   eval
 topics 词表    题面+grader     主持→逐字稿      逐 check 盲判     assess→explain→next
 ```
 
-- **evalme-define** — 定标:goal.yaml 的 topics 清单 = 优先级声明(weight/critical)+ label 权威词表。**没有数值分数线**:达标是外延式的(该 topic 下 unseen/variant 题的近期通过情况)。
+- **evalme-define** — 定标:goal.yaml 的 topics 清单 = 优先级声明(weight)+ label 权威词表。**没有数值分数线**:达标是外延式的(该 topic 下 unseen/variant 题的近期通过情况)。
 - **evalme-forge** — 制题:题面 + **预注册 grader**(行为锚定的 checks,可选 must_pass)+ labels + difficulty + 参考答案质检。三种来源:`generated`(LLM 按缺口出题)/ `imported`(用户上传,作答前补 grader)/ `imported-live`(真实面试事后归一化,如实降权)。横切行为(如 communication)由 **common grader** 承载,定义一次、跨题复用。
 - **evalme-drill** — 施测:从题库取题主持,主持人**只看题面**(`--prompt-only`,绝不看 checks),产逐字中立 transcript(SHA-256 公证)并立即 record。novelty(unseen/variant/familiar/repeat)由引擎按题系历史派生,不接受自报。
 - **evalme-grade** — 判定:全新上下文盲判,逐条 check 独立给 verdict(pass/partial/fail/no-evidence)+ 行号证据。可攒批:trial 落地即安全,grading 何时补都行。
