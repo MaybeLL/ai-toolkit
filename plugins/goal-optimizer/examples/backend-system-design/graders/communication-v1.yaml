@@ -1,0 +1,12 @@
+# common grader — 横切行为,跨题复用(ADR-0005);一经引用不可变,修订开新版
+grader: communication
+version: 1
+label: communication
+applies_to: [mock_interview, real_interview]
+checks:
+  - id: m1
+    text: 先给结构(要点框架/画出链路)再展开细节
+  - id: m2
+    text: 主动澄清模糊需求而非直接假设
+  - id: m3
+    text: 方案选型时明示 tradeoff(说出备选与取舍),而非只报一个结论

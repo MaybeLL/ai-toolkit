@@ -1,0 +1,4 @@
+interface:
+  display_name: "Task Forge"
+  short_description: "Forge tasks: prompt + preregistered grader + reference-solution QA; import questions; normalize real interviews"
+  default_prompt: "Use $task-forge to create a new task for my weakest topic, with a preregistered grader I confirm."

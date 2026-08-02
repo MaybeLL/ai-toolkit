@@ -2,42 +2,42 @@
 
 [![CI](https://github.com/MaybeLL/ai-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MaybeLL/ai-toolkit/actions/workflows/ci.yml)
 
-一个以“目标”为中心、以“能力”为状态、以“证据”为依据、以“优化”为核心循环的
-**个人能力操作系统(Goal Optimization System)**。
+一个本地优先、append-only 的**个人能力评测系统**——用 agent 评测的组织方式评测人:
+每道题(task)自带预注册的评分标准(grader),每次尝试(trial)留下逐字稿(transcript),
+每个结论都能回溯到逐字稿的具体行。
 
-它不关心你学了什么,而关心:**你距离目标还有多远,以及下一单位时间投入在哪里,能最大幅度缩小差距?**
+> 核心问题:**我距离目标还有多远?**——答案必须可信、可查、可复算。
+> "下一步练什么"(next)是测量基础设施之上的便利视图,不是系统的灵魂。
 
-核心循环:
+五环节流水线(spec-v0.2,task 中心模型):
 
 ```
-写入侧(每份表现)          读取侧(看结果时刷新)
-record → observe    │    assess → explain → next
-记录表现   提取观测   │   聚合能力   解释证据链   定下一步
+定标          制题           施测            判定             复盘
+goal-define → task-forge  →  goal-drill  →  goal-grade  →   goal-review
+topics 词表    题面+grader     主持→逐字稿      逐 check 盲判     assess→explain→next
 ```
 
-`record → observe` 是写入侧,只追加不可变事实。`assess` 是读模型刷新(全量重算 `state/`),
-与摄取解耦——看结果前懒触发或一批摄取后统一跑一次,不属于单份表现的写入事务。
-
-- **record** — 把一次表现(模拟面试、练习作答)登记为不可变的事实,不含任何评价。
-- **observe** — 宿主 Agent 读原始 artifact,按 rubric 提取结构化观测(pass/partial/fail + 指向具体行号的证据摘录);提取时看不到历史分数(防锚定)。
-- **assess** — 读模型刷新:确定性引擎把全部观测聚合成每个 `(能力, 维度)` 的 **score** 与 **confidence**,再对比目标算出按优先级排序的差距。无 LLM 参与;与摄取解耦,读取前刷新。
-- **explain** — 展示某个能力数字为什么是这个值:每条支撑证据、其权重的逐因子拆解、以及它出自 artifact 的哪一行。
-- **next** — 确定性地给出优先级最高的可行动缺口,Agent 据此设计至多 3 个 diagnose/train 任务。只排序,不编造提升数值。
+- **goal-define** — 定标:goal.yaml 的 topics 清单 = 优先级声明(weight/critical)+ label 权威词表。**没有数值分数线**:达标是外延式的(该 topic 下 unseen/variant 题的近期通过情况)。
+- **task-forge** — 制题:题面 + **预注册 grader**(行为锚定的 checks,可选 must_pass)+ labels + difficulty + 参考答案质检。三种来源:`generated`(LLM 按缺口出题)/ `imported`(用户上传,作答前补 grader)/ `imported-live`(真实面试事后归一化,如实降权)。横切行为(如 communication)由 **common grader** 承载,定义一次、跨题复用。
+- **goal-drill** — 施测:从题库取题主持,主持人**只看题面**(`--prompt-only`,绝不看 checks),产逐字中立 transcript(SHA-256 公证)并立即 record。novelty(unseen/variant/familiar/repeat)由引擎按题系历史派生,不接受自报。
+- **goal-grade** — 判定:全新上下文盲判,逐条 check 独立给 verdict(pass/partial/fail/no-evidence)+ 行号证据。可攒批:trial 落地即安全,grading 何时补都行。
+- **goal-review** — 复盘:`assess`(确定性重算)→ `explain`(证据链、novelty 分层、成长曲线、stale 标注)→ `next`(选题器:从题库选未做过的 unseen/variant 题,无题可选则 `forge_needed`)。
 
 ### 系统不变量
 
-- **事实不可变** — `artifacts/` 与 `data/events.jsonl` 只增不改。
-- **推断可再生** — `state/` 完全派生:`rm -rf state/ && assess` 逐字节重建(recency 用数据自身时钟而非运行时钟)。
-- **证据链完整** — 任何能力结论都能回溯到 artifact 里的具体行。
-- **职责分离** — Agent 判断语义,CLI 计算每一个数字。
+- **事实不可变** — `transcripts/` 与 `data/trials.jsonl`、`data/gradings.jsonl` 只增不改;纠错走 retraction。
+- **投影可再生** — `state/` 完全派生:`rm -rf state/ && assess` 逐字节重建(recency 用数据自身时钟)。
+- **证据链完整** — 任何结论都能回溯到 transcript 具体行;task/grader 版本化,数值变化可区分"你变了"还是"标准变了"。
+- **职责分离** — Agent 判断语义(逐 check verdict),CLI 计算每一个数字;展示用粗档位(weak/uneven/solid/strong),不输出假精确小数。
+- **反锚定靠结构** — grader 预注册(时序隔离)+ 盲判 fresh context(空间隔离),不靠口头约定。
 
-设计全文见 [docs/SPEC.md](docs/SPEC.md)。
+设计全文见 [docs/SPEC.md](docs/SPEC.md),决策记录见 [docs/adr/](docs/adr/),术语表见 [CONTEXT.md](CONTEXT.md)。
 
 ## 仓库布局：个人 agent toolkit
 
 本仓库是 MaybeLL 的个人 agent toolkit，以 **plugin 为单元**开发自己用的能力：
 
-- [plugins/goal-optimizer](plugins/goal-optimizer) — 目标优化系统（CLI + 4 个 skill）
+- [plugins/goal-optimizer](plugins/goal-optimizer) — 能力评测系统（CLI + 5 个 skill）
 - [plugins/productivity](plugins/productivity) — 个人生产力 skill 合集（9 个 skill，纯 skill 无代码）
 
 新增能力时按类型放：plugin（成套功能）、mcp（协议服务）、skill（纯技能）、cli（独立命令）。
@@ -106,7 +106,7 @@ claude plugin install productivity@maybell-plugins
 ```
 
 然后**完全退出并重开 Claude Code**——新 skill 只有整会话重启后才注册,`/reload-plugins` 不够。
-重启后 goal-optimizer 应看到四个 skill:`goal-manage` / `goal-grill` / `goal-log` / `goal-review`;productivity 应看到九个 skill(`explain-clearly` / `grilling` 等)。
+重启后 goal-optimizer 应看到五个 skill:`goal-define` / `task-forge` / `goal-drill` / `goal-grade` / `goal-review`;productivity 应看到九个 skill(`explain-clearly` / `grilling` 等)。
 
 仍不出现时按此排查:
 
@@ -117,12 +117,12 @@ claude plugin install productivity@maybell-plugins
 
 ## 试用 worked example
 
-仓库自带一个完整示例 workspace:[`plugins/goal-optimizer/examples/backend-system-design`](plugins/goal-optimizer/examples/backend-system-design)——三份面试逐字稿、提取出的观测、以及派生的能力/差距状态。
+仓库自带一个完整示例 workspace:[`plugins/goal-optimizer/examples/backend-system-design`](plugins/goal-optimizer/examples/backend-system-design)——题库(3 道 task + 1 个 common grader)、三条已判定的 trial、以及派生的健康度状态。
 
 ```bash
 cd plugins/goal-optimizer/scripts
 WS=../examples/backend-system-design
-node goal.mjs explain idempotency.transfer --workspace "$WS"
+node goal.mjs explain idempotency --workspace "$WS"
 # 从事实重算,验证逐字节一致(INV-2):
 rm -rf "$WS/state" && node goal.mjs assess --workspace "$WS"
 ```

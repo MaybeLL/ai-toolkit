@@ -8,11 +8,11 @@
     {
       "name": "goal-optimizer",
       "source": "./plugins/goal-optimizer",
-      "description": "A local-first, event-sourced goal optimization system: evidence → capability → gap.",
+      "description": "A local-first, append-only capability measurement system: task bank → trial → blind grading → evidence-chained topic health.",
       "category": "Productivity",
       "tags": [
-        "goal-optimization",
-        "capability",
+        "capability-measurement",
+        "evals",
         "career-growth"
       ]
     },

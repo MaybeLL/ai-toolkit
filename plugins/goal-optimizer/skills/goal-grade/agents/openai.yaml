@@ -1,0 +1,4 @@
+interface:
+  display_name: "Goal Grade"
+  short_description: "Grade blind: per-check verdicts with line-referenced evidence, in a fresh context; batchable"
+  default_prompt: "Use $goal-grade to grade my ungraded trials, one check at a time, blind."

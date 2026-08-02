@@ -1,61 +1,59 @@
 # Goal Optimizer
 
-A local-first, event-sourced **goal optimization system**. It doesn't track what you
-studied — it tracks *how far you are from your goal* and *where the next unit of effort
-pays off most*.
+A local-first, append-only **capability measurement system** for humans, organized the way
+agent evals are: every question (task) ships with a preregistered grader; every attempt
+(trial) leaves a transcript; every conclusion traces back to a line in that transcript.
 
-The core loop:
+> Core question: *how far am I from my goal?* — and the answer must be trustworthy,
+> inspectable, and recomputable. "What to practice next" is a convenience view on top of
+> the measurement infrastructure, not the soul of the system.
+
+The pipeline (spec-v0.2, task-centric — see [docs/SPEC.md](../../docs/SPEC.md) and
+[docs/adr/](../../docs/adr/)):
 
 ```
-write side (per performance)   read side (refresh when you look)
-record → observe          │    assess → explain → next
-记录表现   提取观测         │   聚合能力   解释证据链   定下一步
+define      forge        drill          grade            review
+定标    →   制题     →   施测      →    判定       →     复盘
+topics      task +       transcript     per-check        assess → explain → next
+词表        grader       + trial        blind verdicts   健康度   证据链    选题
 ```
 
-`record → observe` is the write side — append-only facts. `assess` is a read-model refresh
-(a full recompute of `state/`), decoupled from intake: triggered lazily before you read, or
-once after a batch of intakes — never part of a single performance's write transaction.
-
-- **record** — log a performance (a mock interview, a practice answer) as an immutable
-  fact. No scores here.
-- **observe** — the host agent reads the raw artifact and, guided by a rubric, extracts
-  structured observations (pass/partial/fail + a line-referenced evidence quote). The
-  agent never sees prior scores (anti-anchoring).
-- **assess** — a read-model refresh: a deterministic engine aggregates all observations
-  into per-`(capability, dimension)` estimates with a **score** and a **confidence**, then
-  compares against your goal to produce a prioritized gap list. No LLM here; decoupled from
-  intake, refreshed before you read.
-- **explain** — shows exactly why a number is what it is: every supporting piece of
-  evidence, its weight broken down factor-by-factor, and the line in the raw artifact it
-  came from.
-- **next** — surfaces the highest-priority actionable gaps (deterministic); the agent
-  designs up to 3 concrete diagnose/train tasks from them. Ranking, not fabricated deltas.
-
-Four skills, one per moment of use:
-
-- **`goal-manage`** (goal lifecycle) creates a new goal workspace and co-drafts its
-  requirements and rubric with you (you confirm the numbers), and later updates, views,
-  or deletes goals as they evolve — requirements and rubric are a long-lived, git-versioned
-  target model.
-- **`goal-grill`** (optional) runs a mock interview / self-test, saves a clean, un-scored
-  transcript into `artifacts/`, then **hands off to `goal-log` (mandatory)** — every drill
-  becomes a recorded fact. It never reads the rubric or gaps while questioning
-  (anti teaching-to-test) and never scores itself.
-- **`goal-log`** (after each performance) is the capture pipeline (write side) — `record →
-  observe` — the single intake for any artifact (a drill's transcript or a real interview
-  you paste in). `observe` scores blind (no prior estimates loaded). It does **not** run
-  `assess`: the projection refresh belongs to the read side (`goal-review`).
-- **`goal-review`** (when you want to look) is the read side — `assess` (refresh the
-  projection) → `explain` (evidence chain) + `next` (a plan for the highest-priority gap).
-  Nothing is ingested here. (`list`, the cross-goal overview, lives in `goal-manage`.)
+- **goal-define** (M1) — draft the goal's `topics` list: relative weights, critical
+  flags, and the authoritative label vocabulary. No numeric score lines: passing is
+  extensional (recent pass rate on unseen/variant tasks), not "reach 0.75".
+- **task-forge** (M2) — build the task bank. Each task = prompt + **preregistered
+  grader** (behavior-anchored checks, optional `must_pass`) + labels + difficulty +
+  reference solution (QA: the reference must pass its own grader). Three origins:
+  `generated` (LLM fills a gap), `imported` (user-supplied question, grader written
+  before answering), `imported-live` (real interview normalized after the fact —
+  honestly down-weighted). Cross-cutting behaviors (e.g. communication) live in
+  **common graders**, defined once and applied across all tasks.
+- **goal-drill** (M3) — host a mock interview from the bank. The interviewer sees the
+  prompt **only** (`--prompt-only`, never the checks), saves a verbatim neutral
+  transcript (sha256-notarized), and records the trial immediately. Novelty
+  (unseen/variant/familiar/repeat) is derived from history, never self-reported.
+- **goal-grade** (M4) — blind, per-check verdicts (`pass|partial|fail|no-evidence`)
+  in a fresh context, each with a line-referenced evidence quote. Batchable: trials
+  are safe the moment they land; gradings can be added whenever.
+- **goal-review** (M6) — `assess` (deterministic recompute) → `explain` (evidence
+  chain, novelty breakdown, growth curves, stale markers) → `next` (a task picker,
+  not a task inventor: it selects unattempted unseen/variant tasks for the weakest
+  topics, or emits `forge_needed`).
 
 ### Invariants
 
-- **Facts are immutable.** `artifacts/` and `data/events.jsonl` are append-only.
-- **Estimates are derived.** `state/` is fully recomputable: `rm -rf state/ && assess`
-  reproduces byte-identical output (recency uses the data's own clock, not wall-time).
-- **Every conclusion is traceable** to a line in a raw artifact.
-- **LLM vs deterministic split:** the agent judges meaning; the CLI computes every number.
+- **Facts are immutable.** `transcripts/`, `data/trials.jsonl`, `data/gradings.jsonl`
+  are append-only; corrections are retraction records.
+- **Projections are derived.** `rm -rf state/ && assess` reproduces byte-identical
+  output (recency uses the data's own clock, not wall-time).
+- **Every conclusion is traceable** to a line in a transcript, and tasks/graders are
+  versioned — a score change is always attributable to *you changed* vs *the standard
+  changed*.
+- **LLM vs deterministic split:** agents judge meaning (per-check verdicts); the CLI
+  computes every number. Displayed levels are coarse bands (weak/uneven/solid/strong),
+  not fake-precision decimals.
+- **Anti-anchoring is structural,** not verbal: graders are preregistered (temporal
+  isolation) and grading runs in a fresh context (spatial isolation).
 
 ## Requirements
 
@@ -72,23 +70,23 @@ This plugin ships in the `maybell-plugins` marketplace and loads in three hosts:
 - **Codex:** `codex plugin marketplace add MaybeLL/ai-toolkit` then
   `codex plugin add goal-optimizer@maybell-plugins`.
 - **Pi:** `pi install git:github.com/MaybeLL/ai-toolkit` (add `-l` for project-local).
-  Invoke a skill via e.g. `/skill:goal-log` or `/skill:goal-review`.
+  Invoke a skill via e.g. `/skill:goal-drill` or `/skill:goal-review`.
 
 For a local checkout, register the repo root as a local marketplace.
 
 ## Try the worked example
 
 A complete example workspace lives at
-[`examples/backend-system-design/`](./examples/backend-system-design/) — three interview
-transcripts, extracted observations, and the derived capability/gap state.
+[`examples/backend-system-design/`](./examples/backend-system-design/) — a task bank
+(3 tasks + 1 common grader), three graded trials, and the derived health state.
 
 ```sh
 cd plugins/goal-optimizer/scripts
 WS=../examples/backend-system-design
-node goal.mjs explain idempotency.transfer --workspace "$WS"
+node goal.mjs explain idempotency --workspace "$WS"
 # recompute from facts and confirm it's byte-identical:
 rm -rf "$WS/state" && node goal.mjs assess --workspace "$WS"
 ```
 
-See [`docs/SPEC.md`](../../docs/SPEC.md) for the full data contract, weight/confidence
-formulas, and command semantics.
+See [`docs/SPEC.md`](../../docs/SPEC.md) for the full data contract, estimator formulas,
+and command semantics; design decisions live in [`docs/adr/`](../../docs/adr/).

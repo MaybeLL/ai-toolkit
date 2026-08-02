@@ -1,0 +1,21 @@
+task: idempotency-concept
+version: 1
+origin: generated
+labels: [idempotency]
+difficulty: 0.4
+prompt: |
+  对着白板,把"幂等"这个概念讲清楚:定义、HTTP 方法的幂等语义、
+  业务系统里写操作的幂等如何实现、幂等键应该怎么选。
+  无时间限制,无提示,不查资料。
+grader:
+  checks:
+    - id: c1
+      text: 无提示给出幂等定义,并用 HTTP 方法(GET/PUT/POST)说明幂等语义差异
+    - id: c2
+      text: 讲清幂等键机制(键+结果原子存储、结果回放),并给出并发兜底(唯一约束)
+    - id: c3
+      text: 明确键选择规则:同一业务意图重试用同键、不同意图用不同键
+reference_solution: |
+  定义(一次与多次效果相同)→ GET/PUT 幂等、POST 不幂等 → 幂等键三步
+  (意图生成键 / 查键回放 / 键+结果原子落库,唯一索引兜底并发)→
+  键绑定业务意图而非请求内容,重试复用同键、新意图换新键。

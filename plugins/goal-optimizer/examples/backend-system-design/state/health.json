@@ -1,0 +1,86 @@
+{
+  "estimator_version": "extensional-v0.1",
+  "as_of": "2026-07-27T21:00:00+08:00",
+  "params": {
+    "pass_threshold": 0.7,
+    "uv_target": 0.6,
+    "min_attempted": 2,
+    "stale_days": 60,
+    "saturation_half_weight": 1.5,
+    "bands": {
+      "weak": 0.4,
+      "uneven": 0.65,
+      "solid": 0.85
+    }
+  },
+  "topics": {
+    "communication": {
+      "band": "solid",
+      "confidence": 0.1867,
+      "weight": 0.5,
+      "critical": false,
+      "cross_cutting": true,
+      "healthy": false,
+      "deficit": 0.4,
+      "priority": 0.1187,
+      "mode": "diagnose",
+      "stale": false,
+      "last_verified": "2026-07-26",
+      "coverage": {
+        "suite": [
+          "communication"
+        ],
+        "attempted": [
+          "payment-system"
+        ],
+        "coverage_ok": false
+      },
+      "by_novelty": {
+        "unseen": {
+          "trials": 1,
+          "passed": 1
+        }
+      },
+      "must_pass_failures": [],
+      "no_evidence_checks": 1
+    },
+    "idempotency": {
+      "band": "solid",
+      "confidence": 0.4065,
+      "weight": 0.9,
+      "critical": true,
+      "cross_cutting": false,
+      "healthy": false,
+      "deficit": 0.7175,
+      "priority": 0.4541,
+      "mode": "train",
+      "stale": false,
+      "last_verified": "2026-07-27",
+      "coverage": {
+        "suite": [
+          "flash-sale-inventory",
+          "idempotency-concept",
+          "payment-system"
+        ],
+        "attempted": [
+          "flash-sale-inventory",
+          "idempotency-concept",
+          "payment-system"
+        ],
+        "coverage_ok": true
+      },
+      "by_novelty": {
+        "unseen": {
+          "trials": 2,
+          "passed": 1
+        },
+        "variant": {
+          "trials": 1,
+          "passed": 0
+        }
+      },
+      "must_pass_failures": [],
+      "no_evidence_checks": 0
+    }
+  }
+}

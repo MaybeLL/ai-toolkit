@@ -2,12 +2,12 @@
   "name": "goal-optimizer-pi-package",
   "version": "0.1.0",
   "private": true,
-  "description": "Pi package adapter for the Goal Optimizer — a local-first, event-sourced goal optimization system.",
+  "description": "Pi package adapter for the Goal Optimizer — a local-first, append-only capability measurement system organized like agent evals.",
   "license": "MIT",
   "keywords": [
     "pi-package",
-    "goal-optimization",
-    "capability",
+    "capability-measurement",
+    "evals",
     "career-growth"
   ],
   "type": "module",

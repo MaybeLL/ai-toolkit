@@ -1,0 +1,37 @@
+{
+  "as_of": "2026-07-27T21:00:00+08:00",
+  "pending_grading": [],
+  "coverage_gaps": [],
+  "topics": {
+    "communication": {
+      "suite": [
+        {
+          "family": "communication",
+          "latest": "communication-v1",
+          "trials": 0
+        }
+      ],
+      "no_evidence_checks": 1
+    },
+    "idempotency": {
+      "suite": [
+        {
+          "family": "flash-sale-inventory",
+          "latest": "flash-sale-inventory-v1",
+          "trials": 1
+        },
+        {
+          "family": "idempotency-concept",
+          "latest": "idempotency-concept-v1",
+          "trials": 1
+        },
+        {
+          "family": "payment-system",
+          "latest": "payment-system-v1",
+          "trials": 1
+        }
+      ],
+      "no_evidence_checks": 0
+    }
+  }
+}

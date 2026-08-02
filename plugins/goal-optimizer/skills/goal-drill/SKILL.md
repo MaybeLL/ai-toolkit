@@ -1,0 +1,42 @@
+---
+name: goal-drill
+description: 施测(M3):从题库取题主持一场模拟面试/练习,产出逐字、中立的 transcript,主持完立即 record 入库(trial)。当用户想做题、练一场模拟面试、或需要把刚完成的表现登记为事实时使用。取题只看题面(--prompt-only),绝不看 grader checks;不打分(那是 goal-grade,必须换新上下文)。
+---
+
+# Goal Drill(施测:主持 → transcript → trial)
+
+从题库取一道题,主持一场表现,把逐字稿存进 `transcripts/`,然后**立即 record**——主持完顺手入库,一个会话闭环,不留断链。
+
+## CLI 协议
+
+`<scripts>` = 本 SKILL.md 上两级的 `scripts/` 目录;所有命令 `--workspace <ws>`。
+
+```
+node <scripts>/goal.mjs task show <ref|family> --workspace <ws> --prompt-only   # 只取题面
+node <scripts>/goal.mjs record --workspace <ws> --task <task_ref> \
+     --type <mock_interview|practice|real_interview> --occurred-at <ISO> \
+     [--session <场次id>] [--duration <实际耗时min>] \
+     [--time-limit true] [--hints true] [--materials true] --evaluator <agent|human> \
+     --transcript <相对 ws 的路径>
+node <scripts>/goal.mjs retract <trial_id> --workspace <ws> --occurred-at <ISO> --reason <文字>
+```
+
+record 不接受 `--novelty`(引擎按题系历史派生)、不接受 `--difficulty`(题目属性)。
+
+## 流程
+
+1. **取题**:用户指定 task_ref,或从 `state/plan.json`(goal-review 产出)拿推荐。**只用 `--prompt-only`**——你是主持人,看了 checks 会无意识朝检查点引导(teaching-to-test,SPEC §7)。
+2. **主持**:按题面出题;像真实面试官那样追问,但**不评价、不提示、不教学**(除非用户明确要求提示——那要如实记 `--hints true`)。同场多题共享一个 `--session`。
+3. **存稿**:逐字、中立的 transcript 写入 `transcripts/<日期>-<题系>.md`。只记发生了什么,不写任何评语——评价属于 grading 层。
+4. **入库**:立即 `record`。conditions 如实填(是否限时/提示/查资料)。真实面试(用户贴稿,题已由 task-forge 归一化)也走这里,`--type real_interview`。
+5. **交接**:告诉用户 trial_id,打分请**换新会话**用 goal-grade(可攒批)。**你不打分**——你主持过这场面试,已被污染(反锚定,SPEC §7)。
+
+## 纠错
+
+记错了(conditions 填错、transcript 贴错)→ `retract` + 重新 `record`。事实不可改,只可撤销重录。
+
+## 红线
+
+- 绝不 `task show` 全量(只许 `--prompt-only`)。
+- transcript 中不夹带你的评价。
+- 主持与打分不同上下文:本会话永不执行 grade。

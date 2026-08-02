@@ -1,4 +1,4 @@
 interface:
   display_name: "Goal Review"
-  short_description: "Review: see where you are, why, how far from the goal, and what to practice next"
-  default_prompt: "Use $goal-review to show my current capabilities, the evidence behind them, and the highest-priority gap with a next-step plan."
+  short_description: "Review: topic health with evidence chains, novelty-layered pass rates, stale markers, and a task pick"
+  default_prompt: "Use $goal-review to assess my current topic health, explain the evidence, and pick what to practice next."

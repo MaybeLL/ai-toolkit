@@ -1,0 +1,20 @@
+task: flash-sale-inventory
+version: 1
+origin: generated
+labels: [idempotency]
+difficulty: 0.5
+variant_of: payment-system
+prompt: |
+  设计一个"秒杀下单扣库存"接口:用户抢购,点击下单后扣减库存并生成订单。
+  说明你的设计,重点关注超卖与重复下单。
+grader:
+  checks:
+    - id: c1
+      text: 给出防超卖方案(条件更新/原子扣减),不产生负库存
+    - id: c2
+      text: 无提示主动识别重复下单风险并对应到幂等(而非只当作超卖问题)
+    - id: c3
+      text: 幂等键并发窗口处理正确(唯一索引插入定序,冲突转读取),无需提醒
+reference_solution: |
+  条件更新防超卖 → 主动指出连点/重试导致重复下单,幂等键(点击意图)
+  → 唯一索引插入定序,插入冲突即回放已有订单;查-再-插有窗口,必须靠约束兜底。
