@@ -64,7 +64,9 @@ function die(msg) {
 
 // ---------------------------------------------------------------------------
 // minimal YAML loader — subset used by goal.yaml / tasks/*.yaml / graders/*.yaml:
-// nested maps, lists of maps, scalars, comments, flow lists [a, b], block scalars (|)
+// nested maps, lists of maps, scalars, comments, flow lists [a, b], block scalars
+// (literal `|` and folded `>`). Block indicators with chomping/indent modifiers
+// (|-, >+, |2, …) are NOT supported and fail loudly rather than mis-parse silently.
 // ---------------------------------------------------------------------------
 function stripComment(line) {
   let inS = false,
@@ -78,6 +80,21 @@ function stripComment(line) {
   return line;
 }
 
+// Fold a folded (`>`) block scalar's body: consecutive non-empty lines join with a
+// single space; a blank line becomes a newline (paragraph break). Approximates YAML
+// folding for our display-text use (check text, prompts) — good enough, never lossy-silent.
+function foldBlockLines(body) {
+  let out = "";
+  for (const line of body) {
+    if (line === "") out += "\n";
+    else {
+      if (out !== "" && !out.endsWith("\n")) out += " ";
+      out += line;
+    }
+  }
+  return out + (out ? "\n" : "");
+}
+
 function loadYaml(text) {
   const blocks = new Map();
   let blockN = 0;
@@ -88,8 +105,14 @@ function loadYaml(text) {
     if (noComment.trim() === "") continue;
     const indent = noComment.length - noComment.trimStart().length;
     const trimmed = noComment.trim();
-    const bs = trimmed.match(/^((?:- )?[^:]+):\s*\|$/);
+    const bs = trimmed.match(/^((?:- )?[^:]+):\s*([|>][0-9+-]*)\s*$/);
     if (bs) {
+      const indicator = bs[2];
+      // Fail loud on chomping/indent modifiers we don't implement (|-, >+, |2, …),
+      // rather than silently mis-parsing the block body (honest, never quietly wrong).
+      if (indicator !== "|" && indicator !== ">")
+        die(`YAML: unsupported block scalar indicator "${indicator}" near "${bs[1].trim()}" (only bare | and > are supported)`);
+      const folded = indicator === ">";
       // block scalar: capture following RAW lines (comments/blanks preserved)
       const body = [];
       let j = i + 1;
@@ -109,7 +132,7 @@ function loadYaml(text) {
       }
       while (body.length && body[body.length - 1] === "") body.pop();
       const id = `\u0000B${blockN++}\u0000`;
-      blocks.set(id, body.join("\n") + (body.length ? "\n" : ""));
+      blocks.set(id, folded ? foldBlockLines(body) : body.join("\n") + (body.length ? "\n" : ""));
       lines.push({ indent, content: `${bs[1]}: ${id}` });
       i = j - 1;
       continue;
