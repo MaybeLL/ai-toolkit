@@ -1,6 +1,6 @@
 {
   "name": "evalme",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A local-first, append-only capability measurement system for humans, organized like agent evals: tasks with preregistered graders, transcripts, per-check blind verdicts, and an evidence chain from every conclusion back to a line in the transcript.",
   "author": {
     "name": "MaybeLL"
