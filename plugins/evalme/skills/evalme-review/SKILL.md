@@ -13,7 +13,7 @@ description: 复盘(M6,读取侧):assess 刷新投影 → explain 证据链(band
 
 **数据位置(ADR-0010)**:数据住在 goal home——唯一的位置开关是 `EVALME_HOME` 环境变量(不设则默认 `~/evalme/`),无配置文件。与当前所在项目仓库无关,任何目录直接使用,不需要任何路径参数。CLI 自动选中唯一目标;多目标时加 `--goal <id>`。
 
-**同步(ADR-0011)**:会话开始时,若 goal home 是 git 仓库且有 remote → 先 `git pull --ff-only`,确保看的是最新事实;失败(离线/冲突)可继续,但要告知用户结论可能滞后。本 skill 只读,不主动 commit;若 assess 输出「sync debt」警告,转告用户并跑 `node <scripts>/evalme.mjs sync` 清欠账。
+**同步(ADR-0011 / ADR-0013)**:本 skill 只读,跑的 `assess`/`list` 已由 CLI **读前双向 freshen**(自动 `git fetch` + 比对,`behind` 且工作树干净则 `pull --ff-only` 自愈,并固定打印一行同步状态)——无需手动 pull。离线/分叉时 CLI 会标注"freshness unverified"或"⚠ diverged",转告用户结论可能滞后。本 skill 不主动 commit;若输出「sync debt」(未推送/未提交)警告,转告用户并跑 `node <scripts>/evalme.mjs sync` 清欠账。
 
 ```
 node <scripts>/evalme.mjs assess  [--as-of <ISO>]

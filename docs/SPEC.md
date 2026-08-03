@@ -52,7 +52,7 @@
 
 ## 3. Workspace 布局
 
-每个目标一个独立目录,集中存于 **goal home**(ADR-0010)。唯一的位置开关是 `EVALME_HOME` 环境变量(不设则默认 `~/evalme/`),无配置文件。CLI 从任意 cwd 自动解析:单目标自动选中,多目标用 `--goal <id>`。数据位置与使用位置解耦:用户在任何项目仓库里都能直接使用,数据永不落入当前项目。跨设备同步 = goal home 配 git 私有远端(ADR-0011):evalme-define 建目标时引导闭环,各 skill 会话自动会话前 pull、会话后 push;无 git 时静默跳过,单机使用零打扰。
+每个目标一个独立目录,集中存于 **goal home**(ADR-0010)。唯一的位置开关是 `EVALME_HOME` 环境变量(不设则默认 `~/evalme/`),无配置文件。CLI 从任意 cwd 自动解析:单目标自动选中,多目标用 `--goal <id>`。数据位置与使用位置解耦:用户在任何项目仓库里都能直接使用,数据永不落入当前项目。跨设备同步 = goal home 配 git 私有远端(ADR-0011):evalme-define 建目标时引导闭环,各 skill 会话自动会话前 pull、会话后 push;读命令(assess/list)读前双向 freshen 自愈陈旧(ADR-0013);无 git 时静默跳过,单机使用零打扰。
 
 ```
 <workspace>/
@@ -375,7 +375,7 @@ stale    = 曾健康、现仅因 recency 失格 → 只标注,不排复测(ADR-0
 
 ### 6.5 `evalme assess`
 
-读模型刷新:读全部 trials + gradings → 排除被撤销 → §5 计算 → 覆写 `state/health.json`、`state/task-index.json`。纯确定性、幂等(INV-2)。
+读模型刷新:读全部 trials + gradings → 排除被撤销 → §5 计算 → 覆写 `state/health.json`、`state/task-index.json`。纯确定性、幂等(INV-2)。**读前 freshen(ADR-0013)**:home 是 git 仓库且有 remote 时,先 `git fetch` + 双向比对,`behind` 且工作树干净则 `pull --ff-only` 自愈后再计算——避免在陈旧本地上算出自信但过时的结论。`--no-pull` 退为告警,`--no-fetch` 完全离线。freshen 只动工作树(ff-only),不进入 §5 计算,INV-2 不受牵连。
 
 ### 6.6 `evalme explain <topic>`
 
@@ -389,9 +389,9 @@ stale    = 曾健康、现仅因 recency 失格 → 只标注,不排复测(ADR-0
 
 组卷器(ADR-0009):确定性组一场整卷模拟面试。按 topic weight 降序轮转取题,每 topic 优先未尝试题系(would-be unseen/variant),跨 topic 去重;输出卷面(task_ref/topic/would_be_novelty)、建议 session_id、无题可选的 topic(forge_needed)。纯读、无 LLM、不写文件;与 next 的分工:next 答"单点练什么"(补最弱),exam 答"整场考什么"(加权覆盖)。消费方为 evalme-drill 的整场模拟流程。
 
-### 6.9 `evalme sync [--message <m>]`
+### 6.9 `evalme sync [--message <m>] [--pull-only]`
 
-同步封装(ADR-0011):对 goal home 所在 git 仓库依次 commit(有未提交改动时)→ pull --ff-only → push。非 git 仓库 → 提示如何启用;无 remote → 仅本地 commit;pull 分叉/push 失败 → 明确报错但本地数据安全。配套:`assess`/`list` 顺手报告同步欠账(未提交/未推送),使静默欠账可见。与测量计算完全无关(INV-2/INV-5 不受牵连)。
+同步封装(ADR-0011):对 goal home 所在 git 仓库依次 commit(有未提交改动时)→ pull --ff-only → push。非 git 仓库 → 提示如何启用;无 remote → 仅本地 commit;pull 分叉/push 失败 → 明确报错但本地数据安全。`--pull-only`(ADR-0013):只跑 incoming 半程(pull --ff-only),不 commit 不 push,供写侧 skill 会话开始时 freshening 调用。配套:`assess`/`list` **读前双向 freshen**(ADR-0013:fetch + 比对 ahead/behind,behind 自愈或告警,固定打印一行同步状态),把 ADR-0011"只报 ahead 欠账"扩成双向,陈旧读不再静默。与测量计算完全无关(INV-2/INV-5 不受牵连)。
 
 ### 6.10 `evalme retract <trial_id> --reason <text>` / `evalme list --root <dir>`
 

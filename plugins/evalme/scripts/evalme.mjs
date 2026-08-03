@@ -268,22 +268,66 @@ function gitDebt() {
   const dirtyCount = dirty.ok && dirty.out ? dirty.out.split("\n").length : 0;
   const upstream = git(root, ["rev-parse", "--abbrev-ref", "@{u}"]);
   let ahead = 0;
-  let hasRemote = upstream.ok;
+  let behind = 0;
+  const hasRemote = upstream.ok;
   if (upstream.ok) {
-    const cnt = git(root, ["rev-list", "--count", "@{u}..HEAD"]);
-    if (cnt.ok) ahead = parseInt(cnt.out, 10) || 0;
+    // Bidirectional (ADR-0013): ahead = unpushed, behind = unpulled. `behind`
+    // reflects the remote-tracking ref, so it is only as fresh as the last fetch;
+    // freshen() runs a fetch first on read commands to make it true.
+    const cnt = git(root, ["rev-list", "--left-right", "--count", "@{u}...HEAD"]);
+    if (cnt.ok) {
+      const [b, a] = cnt.out.split(/\s+/).map((n) => parseInt(n, 10) || 0);
+      behind = b;
+      ahead = a;
+    }
   }
-  return { root, dirtyCount, ahead, hasRemote };
+  return { root, dirtyCount, ahead, behind, hasRemote };
 }
 
-function debtWarnings() {
-  const d = gitDebt();
-  if (!d) return [];
-  const w = [];
-  if (d.dirtyCount > 0) w.push(`⚠ sync debt: ${d.dirtyCount} uncommitted change(s) in ${d.root} — run: evalme.mjs sync`);
-  if (d.ahead > 0) w.push(`⚠ sync debt: ${d.ahead} commit(s) not pushed — run: evalme.mjs sync`);
-  if (d.dirtyCount > 0 && !d.hasRemote) w.push(`  (no remote configured — sync will commit locally; add a remote for cross-device backup)`);
-  return w;
+// One-line sync status (ADR-0013): stale/divergence must always be visible on
+// read commands, never silently papered over with old data (SPEC §1.1-4).
+function syncStatusLine(d) {
+  if (!d || !d.hasRemote) return null;
+  if (d.ahead > 0 && d.behind > 0) return `sync: ⚠ diverged — ${d.ahead} ahead, ${d.behind} behind (run: evalme.mjs sync)`;
+  if (d.behind > 0) return `sync: ⚠ behind ${d.behind} commit(s) — remote has newer data`;
+  if (d.ahead > 0) return `sync: ${d.ahead} commit(s) not pushed — run: evalme.mjs sync`;
+  return "sync: in sync ✓";
+}
+
+// Read-path freshness (ADR-0013): fetch, then reconcile BEFORE reading data.
+// Default self-heals a fast-forwardable `behind` via pull --ff-only; --no-pull
+// degrades to a loud warning; --no-fetch skips the network entirely (offline).
+// Never throws — a broken/absent/offline git must not block measurement (INV-6).
+function freshen(flags, { allowPull = false } = {}) {
+  let d = gitDebt();
+  if (!d) return { lines: [], debt: null }; // home is not its own git repo → silent (single-machine)
+  const lines = [];
+  if (d.hasRemote && !flags["no-fetch"]) {
+    const fetched = git(d.root, ["fetch", "--quiet"], { timeout: 8000 });
+    if (!fetched.ok) lines.push("sync: ⚠ freshness unverified (fetch failed/offline) — showing local data");
+    else d = gitDebt(); // re-read: behind now reflects the true remote
+  }
+  // Auto-pull needs the network too, so honor --no-fetch here as well: offline
+  // means show status from the local tracking ref, never reach out.
+  if (allowPull && d.hasRemote && d.behind > 0 && !flags["no-pull"] && !flags["no-fetch"]) {
+    if (d.dirtyCount > 0) {
+      lines.push(`sync: ⚠ behind ${d.behind} with ${d.dirtyCount} uncommitted change(s) — run sync to reconcile (not auto-pulling)`);
+    } else {
+      const pull = git(d.root, ["pull", "--ff-only", "--quiet"], { timeout: 15000 });
+      if (pull.ok) {
+        lines.push(`sync: pulled ${d.behind} commit(s) from remote ✓`);
+        d = gitDebt();
+      } else {
+        lines.push("sync: ⚠ pull --ff-only failed (diverged) — run: evalme.mjs sync");
+      }
+    }
+  }
+  const status = syncStatusLine(d);
+  // Suppress the redundant "in sync ✓" line when we already reported a pull.
+  if (status && !(status === "sync: in sync ✓" && lines.length > 0)) lines.push(status);
+  if (d.dirtyCount > 0) lines.push(`sync: ${d.dirtyCount} uncommitted change(s) in ${d.root} — run: evalme.mjs sync`);
+  if (d.dirtyCount > 0 && !d.hasRemote) lines.push("  (no remote configured — sync commits locally; add a remote for cross-device backup)");
+  return { lines, debt: d };
 }
 
 function loadGoal(wsDir) {
@@ -1015,6 +1059,10 @@ function cmdGrade(positional, flags) {
 // ---------------------------------------------------------------------------
 function cmdAssess(flags) {
   const wsDir = ws(flags);
+  // ADR-0013: pull newer facts BEFORE computing, so the projection reflects the
+  // remote's data — not a stale local snapshot. Deterministic compute is unchanged
+  // (INV-2): freshen only mutates the working tree via ff-only pull, never §5 math.
+  const fresh = freshen(flags, { allowPull: true });
   const m = computeModel(wsDir, flags);
 
   const health = {
@@ -1060,7 +1108,7 @@ function cmdAssess(flags) {
   if (m.pendingGrading.length > 0)
     msg += `⚠ ${m.pendingGrading.length} trial(s) await grading: ${m.pendingGrading.join(", ")}\n`;
   if (coverageGaps.length > 0) msg += `⚠ topics with no tasks in the bank: ${coverageGaps.join(", ")} (forge needed)\n`;
-  for (const w of debtWarnings()) msg += w + "\n";
+  for (const w of fresh.lines) msg += w + "\n";
   process.stdout.write(msg);
 }
 
@@ -1351,6 +1399,10 @@ function cmdList(positional, flags) {
   const rootAbs = resolveHome();
   if (!existsSync(rootAbs)) die(`goal home not found: ${rootAbs} (set EVALME_HOME or run init first)`);
 
+  // ADR-0013: fetch + reconcile BEFORE scanning, so a pull that lands a new goal
+  // (or newer data) is reflected instead of answering from a stale local tree.
+  const fresh = freshen(flags, { allowPull: true });
+
   const wsDirs = [];
   if (existsSync(join(rootAbs, "goal.yaml"))) wsDirs.push(rootAbs);
   else {
@@ -1371,11 +1423,12 @@ function cmdList(positional, flags) {
   });
 
   if (flags.json) {
-    process.stdout.write(JSON.stringify({ root: rootAbs, goals }, null, 2) + "\n");
+    const syncStatus = fresh.debt ? syncStatusLine(fresh.debt) : null;
+    process.stdout.write(JSON.stringify({ root: rootAbs, sync: syncStatus, goals }, null, 2) + "\n");
     return;
   }
   const todayISO = new Date().toISOString().slice(0, 10);
-  const L = [`goals under ${rootAbs} (${goals.length} found):`];
+  const L = [...fresh.lines, `goals under ${rootAbs} (${goals.length} found):`];
   for (const g of goals) {
     L.push("");
     L.push(`  ${g.goal_id}   ${g.title}`);
@@ -1395,7 +1448,6 @@ function cmdList(positional, flags) {
     if (g.top) L.push(`    top gap  ${g.top.topic}  priority ${g.top.priority}  [${g.top.mode}]${g.top.stale ? "  ⚠ stale" : ""}`);
     else L.push(`    ✓ all topics healthy`);
   }
-  for (const w of debtWarnings()) L.push(w);
   process.stdout.write(L.join("\n") + "\n");
 }
 
@@ -1416,6 +1468,25 @@ function cmdSync(positional, flags) {
   }
   const repo = debt.root;
   const L = [];
+
+  // ADR-0013: --pull-only runs just the incoming half (fetch is implied by pull),
+  // for read-side freshening without committing or pushing local state.
+  if (flags["pull-only"]) {
+    if (!debt.hasRemote) {
+      process.stdout.write("no remote configured — nothing to pull.\n");
+      return;
+    }
+    const pull = git(repo, ["pull", "--ff-only"]);
+    if (!pull.ok) {
+      process.stdout.write(
+        `⚠ pull --ff-only failed: ${pull.err || pull.out}\n` +
+          "  Local data is safe. Resolve divergence manually (git status / git pull --rebase).\n"
+      );
+      process.exit(1);
+    }
+    process.stdout.write((pull.out.includes("Already up to date") ? "pull: already up to date" : `pull: ${pull.out.split("\n")[0]}`) + "\n");
+    return;
+  }
 
   // 1. commit local changes (facts first — they are already safe on disk).
   if (debt.dirtyCount > 0) {

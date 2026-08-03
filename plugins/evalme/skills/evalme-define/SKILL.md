@@ -20,7 +20,7 @@ description: 定标(M1):创建/修订目标与 topics 清单(weight/cross_cuttin
 
 **数据位置(ADR-0010)**:数据住在 goal home——唯一的位置开关是 `EVALME_HOME` 环境变量(不设则默认 `~/evalme/`),无配置文件。与当前所在项目仓库无关,任何目录直接使用。`init --goal-id <id>` 建在 `<home>/<id>`;`list` 扫 home;多目标时其他命令加 `--goal <id>`。
 
-**同步(ADR-0011)**:本 skill 是同步的引导入口——建目标时把 git 闭环搭好(见下方流程),之后各 skill 会话自动 pull/sync。会话开始时若 home 已是 git 仓库且有 remote → 先 `git pull --ff-only`;会话结束有改动(goal.yaml 修订等)→ `node <scripts>/evalme.mjs sync --message "evalme-define: <摘要>"`。无 git/无 remote 则 sync 自动降级/跳过。
+**同步(ADR-0011)**:本 skill 是同步的引导入口——建目标时把 git 闭环搭好(见下方流程),之后各 skill 会话自动 pull/sync。会话开始时若 home 已是 git 仓库且有 remote → 先 `node <scripts>/evalme.mjs sync --pull-only`;会话结束有改动(goal.yaml 修订等)→ `node <scripts>/evalme.mjs sync --message "evalme-define: <摘要>"`。无 git/无 remote 则 sync 自动降级/跳过。
 
 ```
 node <scripts>/evalme.mjs init --goal-id <id> [--title <t>] [--created-at <YYYY-MM-DD>]
