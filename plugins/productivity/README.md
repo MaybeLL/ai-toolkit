@@ -15,6 +15,7 @@ MaybeLL 的个人生产力技能合集。只包含 **skill**（无 CLI、无 MCP
 | `tdd` | 测试驱动开发（red-green-refactor） | 手动触发 |
 | `teach` | 在 workspace 内教练式教学 | 手动触发 |
 | `drawio` | YAML-first 离线 draw.io 制图 | 手动触发 |
+| `wait-what` | 要求重新用更简单、带上下文的方式解释上一条信息 | 手动触发 |
 
 ## 定位
 
