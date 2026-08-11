@@ -136,6 +136,7 @@ reference_solution: |             # 出题质检:一份应当能通过全部 che
 
 - **origin 三值语义**(ADR-0003):`generated` = LLM 按缺口出题,grader 预注册;`imported` = 用户上传题面,作答前补 grader(用户确认),仍预注册;`imported-live` = 从已发生的表现(真实面试)反推,grader 事后写,**非**预注册——estimator 的 reliability 因子区分对待(§5.1)。
 - **预注册时序**:generated/imported 的 grader 必须在用户作答之前定稿。这是反锚定的第一道墙(§7)。
+- **入库审批**:generated/imported 的 task 草案(题面、labels、difficulty、grader 与参考答案)必须先展示给用户，并在得到对该具体草案的明确确认后才能 `task add` 入库；“帮我出题”不是入库确认。
 - **reference_solution 质检**:入库前,判定 Agent(fresh context)对参考答案跑一遍 grader,应全 pass——证明题可解、grader 没配错(0% 通过多半是题坏了,不是人差)。质检结果不入库,是 evalme-create 的门禁步骤。
 - CLI 校验(`evalme task add`):labels 在词表内、checks 非空、必需字段齐全、题系版本号连续。语义质量由 Agent + 用户负责(INV-5)。
 

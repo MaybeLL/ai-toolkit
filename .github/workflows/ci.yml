@@ -66,3 +66,6 @@ jobs:
 
       - name: Validate manifests, marketplace entries, and Skills
         run: node scripts/validate-plugin-metadata.mjs
+
+      - name: Validate EvalMe workflow policies
+        run: node scripts/validate-evalme-workflows.mjs

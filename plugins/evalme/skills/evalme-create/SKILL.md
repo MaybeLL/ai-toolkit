@@ -57,7 +57,8 @@ reference_solution: |
 2. 写 check 的纪律:每条 = **条件 + 可观察行为 + 判别标准**,禁止形容词("清晰""熟练");问自己"强者和弱者在这条上会留下可从文本指认的不同行为吗?"。
 3. 生成 reference_solution。
 4. **质检**:模拟以判定者视角拿参考答案对照 checks,应全 pass;不能全 pass 说明题或 grader 有病,先修。
-5. `task add` 入库,把 task_ref 告诉用户。
+5. **展示草案并请求审批**:向用户展示题面、labels、difficulty、全部 checks 和 reference_solution，并明确询问“是否确认将此 task 入库？”。
+6. **用户明确确认后才入库**:只有用户明确同意这份具体草案，才执行 `task add` 并告知 task_ref。不要把“帮我出一道题”、继续对话或未回应当作确认；用户要求修改时，修订后重新请求确认。
 
 ### 导入(imported)
 
