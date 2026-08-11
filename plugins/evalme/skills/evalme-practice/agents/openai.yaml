@@ -1,0 +1,4 @@
+interface:
+  display_name: "EvalMe Practice"
+  short_description: "Practice: host a mock interview from the task bank (prompt-only), save the transcript, record the trial"
+  default_prompt: "Use $evalme-practice to run a mock interview on a task from my bank and record it."

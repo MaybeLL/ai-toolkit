@@ -76,7 +76,7 @@ ADR-0011 把跨设备同步织进 skill 流程:会话前 `git pull --ff-only`、
   - **每次读 fetch 的性能成本** → v1 每次读都 fetch(8s 超时),不做缓存。个人单仓库
     场景 fetch 很轻,过早加 TTL 缓存是伪精确;真成为体感问题再引入 `--fresh` 显式门控
     或 N 分钟缓存。
-- SKILL.md:写侧 skill(drill/grade/forge/define)会话前的裸 `git pull --ff-only`
+- SKILL.md:写侧 skill(practice/grade/create/define)会话前的裸 `git pull --ff-only`
   改调 `sync --pull-only`(写命令不 freshen,仍需会话前拉);只读的 review skill 依赖
   `assess`/`list` 自动 freshen,不再要求手动 pull。
 - 离线场景:fetch 失败或 `--no-fetch` → 静默/标注"freshness unverified",绝不阻塞

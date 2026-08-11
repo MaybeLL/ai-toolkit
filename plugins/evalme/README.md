@@ -12,8 +12,8 @@ The pipeline (spec-v0.2, task-centric — see [docs/SPEC.md](../../docs/SPEC.md)
 [docs/adr/](../../docs/adr/)):
 
 ```
-define      forge        drill          grade            review
-定标    →   制题     →   施测      →    判定       →     复盘
+define      create       practice       grade            review
+定标    →   创建题目  →   练习      →    判定       →     复盘
 topics      task +       transcript     per-check        assess → explain → next
 词表        grader       + trial        blind verdicts   健康度   证据链    选题
 ```
@@ -21,14 +21,14 @@ topics      task +       transcript     per-check        assess → explain → 
 - **evalme-define** (M1) — draft the goal's `topics` list: relative weights and
   flags, and the authoritative label vocabulary. No numeric score lines: passing is
   extensional (recent pass rate on unseen/variant tasks), not "reach 0.75".
-- **evalme-forge** (M2) — build the task bank. Each task = prompt + **preregistered
+- **evalme-create** (M2) — build the task bank. Each task = prompt + **preregistered
   grader** (behavior-anchored checks, optional `must_pass`) + labels + difficulty +
   reference solution (QA: the reference must pass its own grader). Three origins:
   `generated` (LLM fills a gap), `imported` (user-supplied question, grader written
   before answering), `imported-live` (real interview normalized after the fact —
   honestly down-weighted). Cross-cutting behaviors (e.g. communication) live in
   **common graders**, defined once and applied across all tasks.
-- **evalme-drill** (M3) — host a mock interview from the bank. The interviewer sees the
+- **evalme-practice** (M3) — host a mock interview from the bank. The interviewer sees the
   prompt **only** (`--prompt-only`, never the checks), saves a verbatim neutral
   transcript (sha256-notarized), and records the trial immediately. Novelty
   (unseen/variant/familiar/repeat) is derived from history, never self-reported.
@@ -38,7 +38,7 @@ topics      task +       transcript     per-check        assess → explain → 
 - **evalme-review** (M6) — `assess` (deterministic recompute) → `explain` (evidence
   chain, novelty breakdown, growth curves, stale markers) → `next` (a task picker,
   not a task inventor: it selects unattempted unseen/variant tasks for the weakest
-  topics, or emits `forge_needed`).
+  topics, or emits `create_needed`).
 
 ### Invariants
 
@@ -62,15 +62,30 @@ no cloud. Git is the sync mechanism.
 
 ## Install
 
-This plugin ships in the `maybell-plugins` marketplace and loads in three hosts:
+This plugin ships in the `maybell-plugins` marketplace and loads in three hosts.
+After a Claude Code or Codex installation, start a new session before invoking a skill.
 
-- **Claude Code:** `claude plugin marketplace add MaybeLL/ai-toolkit` then
-  `claude plugin install evalme@maybell-plugins`. Skills are
-  auto-discovered.
-- **Codex:** `codex plugin marketplace add MaybeLL/ai-toolkit` then
-  `codex plugin add evalme@maybell-plugins`.
-- **Pi:** `pi install git:github.com/MaybeLL/ai-toolkit` (add `-l` for project-local).
-  Invoke a skill via e.g. `/skill:evalme-drill` or `/skill:evalme-review`.
+- **Claude Code** (user scope by default):
+
+  ```sh
+  claude plugin marketplace add MaybeLL/ai-toolkit
+  claude plugin install evalme@maybell-plugins
+  ```
+
+- **Codex** (install from the repository's `main` branch):
+
+  ```sh
+  codex plugin marketplace add MaybeLL/ai-toolkit --ref main
+  codex plugin add evalme@maybell-plugins
+  ```
+
+- **Pi** (user scope; add `-l` for project-local):
+
+  ```sh
+  pi install git:github.com/MaybeLL/ai-toolkit
+  ```
+
+  Invoke a skill via e.g. `/skill:evalme-practice` or `/skill:evalme-review`.
 
 For a local checkout, register the repo root as a local marketplace.
 

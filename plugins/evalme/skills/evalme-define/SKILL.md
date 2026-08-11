@@ -1,6 +1,6 @@
 ---
 name: evalme-define
-description: 定标(M1):创建/修订目标与 topics 清单(weight/cross_cutting),治理 label 权威词表;跨目标总览(list)。当用户想建一个新目标、调整 topic 优先级、给词表加新词、归档删除目标、或想看所有目标的健康概览时使用。制题归 evalme-forge,施测归 evalme-drill,复盘归 evalme-review。
+description: 定标(M1):创建/修订目标与 topics 清单(weight/cross_cutting),治理 label 权威词表;跨目标总览(list)。当用户想建一个新目标、调整 topic 优先级、给词表加新词、归档删除目标、或想看所有目标的健康概览时使用。创建题目归 evalme-create,练习归 evalme-practice,复盘归 evalme-review。
 ---
 
 # EvalMe Define(定标:目标 + topics 词表)
@@ -38,7 +38,7 @@ node <scripts>/evalme.mjs list [--root <dir>] [--json]     # 只读,不触发 as
    - 用户明确拒绝则尊重——单机使用完全合法,同步是可选增强。
 3. **陪用户起草 topics**:问清楚这个目标真正考什么(内容领域)、哪些横切行为也算数(如 communication,标 `cross_cutting: true`)。weight 是用户的决策——你起草,**用户确认后生效**。
 4. 检查 `graders/communication-v1.yaml` 模板是否贴合,不贴合陪用户改(生效前可自由改;一经 grading 引用即不可变)。
-5. 交接:制题去 **evalme-forge**(没有题,一切都测不了)。
+5. 交接:创建题目去 **evalme-create**(没有题,一切都测不了)。
 
 ### 换机 / 新设备接入(自动发现,接近无感)
 

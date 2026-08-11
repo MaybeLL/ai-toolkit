@@ -1,6 +1,6 @@
 ---
 name: evalme-grade
-description: 判定(M4):在全新上下文中对 trial 盲判——逐条 check 独立给 verdict(pass/partial/fail/no-evidence)+ 行号证据。默认作为 evalme-drill spawn 的 fresh-context 子代理紧随 record 执行(ADR-0008);也可独立会话消化待打分存货、或在 grader 修订后重判旧 trial。必须 fresh context:不得继承主持过该面试或看过 state/ 结论的上下文。
+description: 判定(M4):在全新上下文中对 trial 盲判——逐条 check 独立给 verdict(pass/partial/fail/no-evidence)+ 行号证据。默认作为 evalme-practice spawn 的 fresh-context 子代理紧随 record 执行(ADR-0008);也可独立会话消化待打分存货、或在 grader 修订后重判旧 trial。必须 fresh context:不得继承主持过该面试或看过 state/ 结论的上下文。
 ---
 
 # EvalMe Grade(判定:盲判,逐 check)
@@ -9,8 +9,8 @@ description: 判定(M4):在全新上下文中对 trial 盲判——逐条 check 
 
 **两种调用形态(ADR-0008):**
 
-1. **子代理(默认)**——evalme-drill 在 record 后 spawn,输入只有 trial_id + workspace。判完 `--write` 落库,向父会话只返回"已落库"与 grading id 清单(多题场次中父会话散场前不该看判定内容)。
-2. **独立会话(兜底)**——消化待打分存货(assess/list 会报告)、grader 修订后重判、或 drill 当场无法 spawn 时的欠账。
+1. **子代理(默认)**——evalme-practice 在 record 后 spawn,输入只有 trial_id + workspace。判完 `--write` 落库,向父会话只返回"已落库"与 grading id 清单(多题场次中父会话散场前不该看判定内容)。
+2. **独立会话(兜底)**——消化待打分存货(assess/list 会报告)、grader 修订后重判、或 practice 当场无法 spawn 时的欠账。
 
 **盲判纪律(SPEC §7,两种形态都不可妥协):**
 

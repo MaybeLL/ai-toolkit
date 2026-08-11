@@ -12,16 +12,16 @@
 五环节流水线(spec-v0.2,task 中心模型):
 
 ```
-定标          制题           施测            判定             复盘
-evalme-define → evalme-forge  →  evalme-drill  →  evalme-grade  →   evalme-review
+定标          创建题目        练习            判定             复盘
+evalme-define → evalme-create → evalme-practice → evalme-grade  →   evalme-review
 topics 词表    题面+grader     主持→逐字稿      逐 check 盲判     assess→explain→next
 ```
 
 - **evalme-define** — 定标:goal.yaml 的 topics 清单 = 优先级声明(weight)+ label 权威词表。**没有数值分数线**:达标是外延式的(该 topic 下 unseen/variant 题的近期通过情况)。
-- **evalme-forge** — 制题:题面 + **预注册 grader**(行为锚定的 checks,可选 must_pass)+ labels + difficulty + 参考答案质检。三种来源:`generated`(LLM 按缺口出题)/ `imported`(用户上传,作答前补 grader)/ `imported-live`(真实面试事后归一化,如实降权)。横切行为(如 communication)由 **common grader** 承载,定义一次、跨题复用。
-- **evalme-drill** — 施测:从题库取题主持,主持人**只看题面**(`--prompt-only`,绝不看 checks),产逐字中立 transcript(SHA-256 公证)并立即 record。novelty(unseen/variant/familiar/repeat)由引擎按题系历史派生,不接受自报。
+- **evalme-create** — 创建题目:题面 + **预注册 grader**(行为锚定的 checks,可选 must_pass)+ labels + difficulty + 参考答案质检。三种来源:`generated`(LLM 按缺口出题)/ `imported`(用户上传,作答前补 grader)/ `imported-live`(真实面试事后归一化,如实降权)。横切行为(如 communication)由 **common grader** 承载,定义一次、跨题复用。
+- **evalme-practice** — 练习:从题库取题主持,主持人**只看题面**(`--prompt-only`,绝不看 checks),产逐字中立 transcript(SHA-256 公证)并立即 record。novelty(unseen/variant/familiar/repeat)由引擎按题系历史派生,不接受自报。
 - **evalme-grade** — 判定:全新上下文盲判,逐条 check 独立给 verdict(pass/partial/fail/no-evidence)+ 行号证据。可攒批:trial 落地即安全,grading 何时补都行。
-- **evalme-review** — 复盘:`assess`(确定性重算)→ `explain`(证据链、novelty 分层、成长曲线、stale 标注)→ `next`(选题器:从题库选未做过的 unseen/variant 题,无题可选则 `forge_needed`)。
+- **evalme-review** — 复盘:`assess`(确定性重算)→ `explain`(证据链、novelty 分层、成长曲线、stale 标注)→ `next`(选题器:从题库选未做过的 unseen/variant 题,无题可选则 `create_needed`)。
 
 ### 系统不变量
 
@@ -48,9 +48,11 @@ topics 词表    题面+grader     主持→逐字稿      逐 check 盲判     
 
 ## 安装
 
-所有插件随 `maybell-plugins` marketplace 分发，可在三个宿主加载：
+三个宿主的安装方式不同。先确认对应命令可用(`claude --version`、`codex --version` 或 `pi --version`)，再按下列步骤执行。
 
-Claude Code:
+### Claude Code
+
+以下命令将 marketplace 和两个插件安装到当前用户范围(默认 scope)：
 
 ```bash
 claude plugin marketplace add MaybeLL/ai-toolkit
@@ -58,29 +60,39 @@ claude plugin install evalme@maybell-plugins
 claude plugin install productivity@maybell-plugins
 ```
 
-Codex:
+安装后**完全退出并重新打开 Claude Code**，再开一个新会话。可用 `/plugin` 查看已安装插件；新会话中应能调用 `evalme-define` 等 skill。
+
+### Codex
+
+以下命令注册本仓库的 `main` 分支为 marketplace，并安装两个插件：
 
 ```bash
-codex plugin marketplace add MaybeLL/ai-toolkit
+codex plugin marketplace add MaybeLL/ai-toolkit --ref main
 codex plugin add evalme@maybell-plugins
 codex plugin add productivity@maybell-plugins
 ```
 
-Pi:
+安装后开一个**新 Codex 会话**，让新安装的 skill 被发现。可用 `codex plugin list` 检查 marketplace 中的可用插件；新会话中应能调用 `$evalme-define` 等 skill。
+
+### Pi
+
+以下命令把整个仓库作为 Pi package 安装到用户范围；Pi 会加载其中声明的 EvalMe 与 productivity skills：
 
 ```bash
 pi install git:github.com/MaybeLL/ai-toolkit
 ```
 
-Claude Code 与 Codex 会自动发现 skill;Pi 通过 `pi.skills` 加载 skill。安装后**完全重启宿主**新开会话即可开始：任意目录唤 `/skill:evalme-define` 建目标，数据自动落在 goal home（`EVALME_HOME` 或默认 `~/evalme/`），与你的任何项目仓库无关。前置依赖只有 Node.js。
+若只想让当前项目使用它，追加 `-l`，即 `pi install git:github.com/MaybeLL/ai-toolkit -l`。重新启动 Pi 后，可用 `/skill:evalme-define` 开始。
+
+三个宿主都只需要 Node.js。EvalMe 的用户数据不保存到当前项目，而是保存到 goal home（`EVALME_HOME` 或默认 `~/evalme/`）。
 
 ### 宿主安装粒度差异
 
 | 宿主 | 安装粒度 | 能否只装一个 plugin |
 |---|---|---|
-| Claude Code | 按 plugin（`plugin install <name>@maybell-plugins`） | 可以，逐个装 |
-| Codex | 按 plugin（`plugin add <name>@maybell-plugins`） | 可以，逐个装 |
-| Pi | 按 package（整个仓库） | 一次全装 |
+| Claude Code | 按 plugin（`claude plugin install <name>@maybell-plugins`） | 可以，逐个装 |
+| Codex | 按 plugin（`codex plugin add <name>@maybell-plugins`） | 可以，逐个装 |
+| Pi | 按 package（整个仓库） | 一次全装；可加 `-l` 限定当前项目 |
 
 Pi 以**仓库为粒度**：`pi install git:github.com/MaybeLL/ai-toolkit` 会加载 `package.json` 的 `pi.skills` 里声明的**所有** skill（目前是 evalme 的 5 个 + productivity 的 10 个）。新增 plugin 时把它加进 `pi.skills` 数组即可，pi 端新开会话自动可见。
 
@@ -106,7 +118,7 @@ claude plugin install productivity@maybell-plugins
 ```
 
 然后**完全退出并重开 Claude Code**——新 skill 只有整会话重启后才注册,`/reload-plugins` 不够。
-重启后 evalme 应看到五个 skill:`evalme-define` / `evalme-forge` / `evalme-drill` / `evalme-grade` / `evalme-review`;productivity 应看到十个 skill(`explain-clearly` / `grilling` / `wait-what` 等)。
+重启后 evalme 应看到五个 skill:`evalme-define` / `evalme-create` / `evalme-practice` / `evalme-grade` / `evalme-review`;productivity 应看到十个 skill(`explain-clearly` / `grilling` / `wait-what` 等)。
 
 仍不出现时按此排查:
 

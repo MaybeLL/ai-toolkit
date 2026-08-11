@@ -20,8 +20,8 @@
      unseen/variant),按题系名排序;无未尝试题系时退化为尝试次数最少者;
   3. 按 topic 顺序轮转(round-robin)取题,跨 topic 去重题系,直到满 N 或耗尽;
   4. 输出卷面(task_ref + topic + would_be_novelty)、建议 session_id、
-     覆盖不足警告(有 weight 但无题可选的 topic → forge_needed)。
-- 消费方:evalme-drill 的"整场模拟"流程——按卷面顺序主持,共享 session,
+     覆盖不足警告(有 weight 但无题可选的 topic → create_needed)。
+- 消费方:evalme-practice 的"整场模拟"流程——按卷面顺序主持,共享 session,
   散场后统一反馈(ADR-0008)。
 
 ## 理由
@@ -34,4 +34,4 @@
 ## 后果
 
 - 纯读取,不写任何文件;不在 INV-2 投影范围(与 list 同类)。
-- drill 的多题流程获得标准入口;卷面仍可被用户手工覆盖(exam 只是建议)。
+- practice 的多题流程获得标准入口;卷面仍可被用户手工覆盖(exam 只是建议)。

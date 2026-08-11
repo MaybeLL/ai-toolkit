@@ -1,18 +1,18 @@
-# ADR-0008: 判定即时化——盲判由 drill 会话 spawn fresh-context 子代理执行,反馈按 session 粒度
+# ADR-0008: 判定即时化——盲判由 practice 会话 spawn fresh-context 子代理执行,反馈按 session 粒度
 
 - 状态:Accepted
 - 日期:2026-02-14
 
 ## 背景
 
-原设计把判定(M4)定位为"可延后攒批",默认路径是 drill 之后另开会话消化存货。
+原设计把判定(M4)定位为"可延后攒批",默认路径是 practice 之后另开会话消化存货。
 产品审视发现:用户答完一道题的最强需求恰是"马上知道自己表现如何",延迟反馈
 是弃用风险。而反锚定(SPEC §7)真正要求的是**上下文隔离**,不是**时间隔离**——
 攒批只是工程便利,不应包装成纪律。
 
 ## 决策
 
-1. **判定默认紧随 record**:evalme-drill 会话在 record 后 spawn 一个 fresh-context
+1. **判定默认紧随 record**:evalme-practice 会话在 record 后 spawn 一个 fresh-context
    盲判子代理,只传 trial_id(不携带任何印象/评语的指针)。子代理自行
    `grade <trial_id>`(打印模式取冻结材料)→ 逐 check 判定 → `--write` 落库。
 2. **反馈按 session 粒度**:
@@ -36,7 +36,7 @@
 
 ## 后果
 
-- evalme-drill 增加"盲判子代理交接 + session 粒度反馈"流程;drill 会话仍不得
+- evalme-practice 增加"盲判子代理交接 + session 粒度反馈"流程;practice 会话仍不得
   自行判定(它只 spawn,不判)。
-- evalme-grade 职责不变,新增"可被 drill 以子代理方式调用"的形态。
+- evalme-grade 职责不变,新增"可被 practice 以子代理方式调用"的形态。
 - 无 CLI/schema 改动:grade 命令与 gradings 契约原样复用。

@@ -1,9 +1,9 @@
 ---
-name: evalme-forge
-description: 制题(M2):按缺口出题、导入用户上传的题目素材、从工作收获/学习笔记等任意材料抽取 task、把真实面试 transcript 归一化为 imported-live task、修订 task/common grader(开新版)、参考答案质检。当用户想出新题、贴来一道面试真题、想把一段值得沉淀的知识/经验变成可练习的题、想把一场已发生的真实面试入库(先归一化)、或要改评分标准时使用。出完题不主持(那是 evalme-drill)、不打分(那是 evalme-grade)。
+name: evalme-create
+description: 创建题目(M2):按缺口出题、导入用户上传的题目素材、从工作收获/学习笔记等任意材料抽取 task、把真实面试 transcript 归一化为 imported-live task、修订 task/common grader(开新版)、参考答案质检。当用户想出新题、贴来一道面试真题、想把一段值得沉淀的知识/经验变成可练习的题、想把一场已发生的真实面试入库(先归一化)、或要改评分标准时使用。出完题不主持(那是 evalme-practice)、不打分(那是 evalme-grade)。
 ---
 
-# EvalMe Forge(制题:题面 + 预注册 grader)
+# EvalMe Create(创建题目:题面 + 预注册 grader)
 
 题库是系统的量具。一道 task = 题面(prompt)+ 预注册 grader(checks)+ labels + difficulty + 参考答案。
 
@@ -11,7 +11,7 @@ description: 制题(M2):按缺口出题、导入用户上传的题目素材、�
 
 | origin | 场景 | grader 何时写 |
 |---|---|---|
-| `generated` | 按 evalme-review 的缺口(`forge_needed`)出新题 | 出题时,预注册 |
+| `generated` | 按 evalme-review 的缺口(`create_needed`)出新题 | 出题时,预注册 |
 | `imported` | 用户上传题面(面经、真题) | 作答**前**补写,仍预注册 |
 | `imported-live` | 真实面试已发生,从 transcript 反推 | 事后写,**非**预注册(estimator 自动降权) |
 
@@ -21,7 +21,7 @@ description: 制题(M2):按缺口出题、导入用户上传的题目素材、�
 
 **数据位置(ADR-0010)**:数据住在 goal home——唯一的位置开关是 `EVALME_HOME` 环境变量(不设则默认 `~/evalme/`),无配置文件。与当前所在项目仓库无关,任何目录直接使用,不需要任何路径参数。CLI 自动选中唯一目标;多目标时加 `--goal <id>`。
 
-**同步(ADR-0011)**:会话开始动数据前,若 goal home 是 git 仓库且有 remote → 先 `node <scripts>/evalme.mjs sync --pull-only`(只拉不推;失败则告知用户先解决,别在旧数据上继续写)。会话结束且有改动 → `node <scripts>/evalme.mjs sync --message "evalme-forge: <摘要>"`(commit+pull+push 一步;失败不阻塞——本地已落盘即安全,CLI 会在 assess/list 里持续报欠账)。home 不是 git 仓库或无 remote 时 sync 自动降级/跳过,不打扰单机用户。
+**同步(ADR-0011)**:会话开始动数据前,若 goal home 是 git 仓库且有 remote → 先 `node <scripts>/evalme.mjs sync --pull-only`(只拉不推;失败则告知用户先解决,别在旧数据上继续写)。会话结束且有改动 → `node <scripts>/evalme.mjs sync --message "evalme-create: <摘要>"`(commit+pull+push 一步;失败不阻塞——本地已落盘即安全,CLI 会在 assess/list 里持续报欠账)。home 不是 git 仓库或无 remote 时 sync 自动降级/跳过,不打扰单机用户。
 
 ```
 node <scripts>/evalme.mjs task add --file <task.yaml>    # 也接受 stdin
@@ -77,7 +77,7 @@ reference_solution: |
 
 ### 归一化(imported-live)
 
-真实面试已发生:从 transcript 反推题面 → 起草 grader(用户确认)→ `origin: imported-live` 入库 → 告诉用户接下来走 evalme-drill 的 record(type=real_interview)再 evalme-grade。
+真实面试已发生:从 transcript 反推题面 → 起草 grader(用户确认)→ `origin: imported-live` 入库 → 告诉用户接下来走 evalme-practice 的 record(type=real_interview)再 evalme-grade。
 
 ### 修订
 
@@ -86,5 +86,5 @@ task/grader 一经 grading 引用即不可变;修订 = 新版本文件(version+1
 ## 红线
 
 - label 不在词表 → 先去 evalme-define 加词,不得私造。
-- 不给 drill 泄 grader:出完题只交 task_ref;主持人只能 `task show --prompt-only`。
+- 不给 practice 泄 grader:出完题只交 task_ref;主持人只能 `task show --prompt-only`。
 - 你不打分、不主持。制完即止。

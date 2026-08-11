@@ -9,7 +9,7 @@
   "interface": {
     "displayName": "EvalMe",
     "shortDescription": "Measure yourself like an agent eval: task bank → trial → blind grading → evidence-chained health per topic.",
-    "longDescription": "A local-first, append-only capability measurement system for humans. Define topics (weights + label vocabulary), forge tasks with preregistered behavior-anchored graders, drill from the bank (prompt-only hosting, notarized transcripts, derived novelty), grade blind per-check in a fresh context, then review: deterministic assess, an evidence chain down to transcript lines, novelty-layered pass rates, stale markers, and a task picker. No numeric score lines — passing is extensional (recent pass rate on unseen/variant tasks). Every projection is byte-for-byte recomputable. v1 scope: backend system-design interviews.",
+    "longDescription": "A local-first, append-only capability measurement system for humans. Define topics (weights + label vocabulary), create tasks with preregistered behavior-anchored graders, practice from the bank (prompt-only hosting, notarized transcripts, derived novelty), grade blind per-check in a fresh context, then review: deterministic assess, an evidence chain down to transcript lines, novelty-layered pass rates, stale markers, and a task picker. No numeric score lines — passing is extensional (recent pass rate on unseen/variant tasks). Every projection is byte-for-byte recomputable. v1 scope: backend system-design interviews.",
     "developerName": "EvalMe Contributors",
     "category": "Productivity",
     "capabilities": [
@@ -18,8 +18,8 @@
       "Write"
     ],
     "defaultPrompt": [
-      "Forge a new idempotency task for my weakest topic.",
-      "Drill me on a task from my bank and record the trial.",
+      "Create a new idempotency task for my weakest topic.",
+      "Practice a task from my bank and record the trial.",
       "Explain my idempotency health with the evidence chain."
     ]
   }

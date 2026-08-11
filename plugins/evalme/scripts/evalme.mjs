@@ -800,7 +800,7 @@ function cmdInit(positional, flags) {
       (existsSync(join(abs, "..", ".git")) || existsSync(join(abs, ".git"))
         ? ""
         : `tip: 建议在 goal home 跑 git init + 私有远端——异地备份 + 跨设备同步(state/ 可 gitignore)\n`) +
-      `next: 与 Agent(evalme-define)起草 topics → evalme-forge 制题 → evalme-drill 施测。\n`
+      `next: 与 Agent(evalme-define)起草 topics → evalme-create 创建题目 → evalme-practice 练习。\n`
   );
 }
 
@@ -857,7 +857,7 @@ function cmdTaskAdd(flags) {
   validateChecks(doc.grader?.checks, ref);
   if (doc.variant_of !== undefined && typeof doc.variant_of !== "string") die("variant_of must be a task family name");
   if (!doc.reference_solution || String(doc.reference_solution).trim() === "")
-    process.stderr.write(`warning: ${ref} has no reference_solution — forge QA (grade the reference, expect all-pass) is skipped\n`);
+    process.stderr.write(`warning: ${ref} has no reference_solution — create QA (grade the reference, expect all-pass) is skipped\n`);
 
   const dest = join(wsDir, "tasks", `${ref}.yaml`);
   if (existsSync(dest)) die(`refusing to overwrite ${dest} (revisions are new versions, INV-4)`);
@@ -882,7 +882,7 @@ function cmdTaskShow(positional, flags) {
   const lib = loadLibrary(wsDir);
   const doc = resolveTaskRef(lib, refArg);
   if (flags["prompt-only"]) {
-    // Drill discipline (§7): the interviewer must never see grader checks —
+    // Practice discipline (§7): the interviewer must never see grader checks —
     // seeing them steers the interview toward the checkpoints (teaching-to-test).
     const out = {
       task_ref: doc._ref,
@@ -1130,7 +1130,7 @@ function cmdAssess(flags) {
   let msg = `assessed ${nTopics} topic(s) from ${m.units.length} evidence unit(s); state written (as_of=${m.nowISO})\n`;
   if (m.pendingGrading.length > 0)
     msg += `⚠ ${m.pendingGrading.length} trial(s) await grading: ${m.pendingGrading.join(", ")}\n`;
-  if (coverageGaps.length > 0) msg += `⚠ topics with no tasks in the bank: ${coverageGaps.join(", ")} (forge needed)\n`;
+  if (coverageGaps.length > 0) msg += `⚠ topics with no tasks in the bank: ${coverageGaps.join(", ")} (create needed)\n`;
   for (const w of fresh.lines) msg += w + "\n";
   process.stdout.write(msg);
 }
@@ -1256,7 +1256,7 @@ function cmdNext(flags) {
           cross_cutting: t.cross_cutting,
           stale: t.stale,
           candidates,
-          forge_needed: !t.cross_cutting && candidates.length === 0,
+          create_needed: !t.cross_cutting && candidates.length === 0,
         };
       });
     process.stdout.write(JSON.stringify({ top, as_of: m.nowISO, topics: ranked }, null, 2) + "\n");
@@ -1278,9 +1278,9 @@ function cmdNext(flags) {
   actions.forEach((a, i) => {
     if (!a.topic || !m.vocab.has(String(a.topic))) die(`action ${i + 1}: topic must be in goal.yaml vocabulary`);
     if (!a.reason || typeof a.reason !== "string") die(`action ${i + 1}: reason (string) is required`);
-    const forge = Boolean(a.forge_needed);
-    if (!forge) {
-      if (!a.task_ref) die(`action ${i + 1}: task_ref is required (or set forge_needed: true)`);
+    const create = Boolean(a.create_needed);
+    if (!create) {
+      if (!a.task_ref) die(`action ${i + 1}: task_ref is required (or set create_needed: true)`);
       const sr = splitRef(String(a.task_ref));
       if (!sr || !m.lib.tasks.has(String(a.task_ref))) die(`action ${i + 1}: task_ref ${a.task_ref} not found in tasks/`);
     }
@@ -1288,7 +1288,7 @@ function cmdNext(flags) {
     out.push({
       rank: i + 1,
       topic: String(a.topic),
-      ...(forge ? { forge_needed: true } : { task_ref: String(a.task_ref) }),
+      ...(create ? { create_needed: true } : { task_ref: String(a.task_ref) }),
       reason: a.reason,
     });
   });
@@ -1328,11 +1328,11 @@ function cmdExam(flags) {
   // 2. per-topic candidate queues: unattempted families first (unseen/variant),
   //    fallback = least-attempted; deterministic name tiebreak.
   const queues = new Map();
-  const forgeNeeded = [];
+  const createNeeded = [];
   for (const id of topicIds) {
     const suite = m.topics[id].coverage.suite; // sorted family names
     if (suite.length === 0) {
-      forgeNeeded.push(id);
+      createNeeded.push(id);
       queues.set(id, []);
       continue;
     }
@@ -1375,8 +1375,8 @@ function cmdExam(flags) {
     size_requested: size,
     session_id: `ses-exam-${m.nowISO.slice(0, 10)}`,
     paper,
-    ...(forgeNeeded.length > 0 ? { forge_needed: forgeNeeded } : {}),
-    ...(paper.length < size ? { note: `task bank exhausted at ${paper.length} task(s); forge more to fill the paper` } : {}),
+    ...(createNeeded.length > 0 ? { create_needed: createNeeded } : {}),
+    ...(paper.length < size ? { note: `task bank exhausted at ${paper.length} task(s); create more to fill the paper` } : {}),
   };
   process.stdout.write(JSON.stringify(out, null, 2) + "\n");
 }

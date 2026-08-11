@@ -136,7 +136,7 @@ reference_solution: |             # 出题质检:一份应当能通过全部 che
 
 - **origin 三值语义**(ADR-0003):`generated` = LLM 按缺口出题,grader 预注册;`imported` = 用户上传题面,作答前补 grader(用户确认),仍预注册;`imported-live` = 从已发生的表现(真实面试)反推,grader 事后写,**非**预注册——estimator 的 reliability 因子区分对待(§5.1)。
 - **预注册时序**:generated/imported 的 grader 必须在用户作答之前定稿。这是反锚定的第一道墙(§7)。
-- **reference_solution 质检**:入库前,判定 Agent(fresh context)对参考答案跑一遍 grader,应全 pass——证明题可解、grader 没配错(0% 通过多半是题坏了,不是人差)。质检结果不入库,是 evalme-forge 的门禁步骤。
+- **reference_solution 质检**:入库前,判定 Agent(fresh context)对参考答案跑一遍 grader,应全 pass——证明题可解、grader 没配错(0% 通过多半是题坏了,不是人差)。质检结果不入库,是 evalme-create 的门禁步骤。
 - CLI 校验(`evalme task add`):labels 在词表内、checks 非空、必需字段齐全、题系版本号连续。语义质量由 Agent + 用户负责(INV-5)。
 
 ### 4.3 graders/*.yaml — common grader(M2)
@@ -232,7 +232,7 @@ checks:
 - `grader_ref` = `task引用#check_id` 或 `common grader引用#check_id`(如 `communication-v1#m1`)——单一管道,判定行标明依据出处(ADR-0005)。
 - `verdict` ∈ `pass | partial | fail | no-evidence`。**no-evidence 是给 judge 的退路**:transcript 未涉及该 check 时如实说没有,不硬判(ADR-0006)。此时 `transcript_ref` 可空,其余情况必填且行段校验(INV-3)。
 - append-only:task/grader 出新版后可对旧 trial 重判(追加),聚合时同一 `(trial_id, 题系#check)` 只取最新版本的判定。
-- **判定纪律**(§7):fresh context;每条 check 独立上下文(不让整体印象污染逐条判定);判定者看不到任何历史结论。**默认紧随 record**(drill 会话 spawn fresh-context 子代理即时判,反馈按 session 粒度,ADR-0008);也可延后攒批——trial 一落地事实即安全,grading 何时补都行。
+- **判定纪律**(§7):fresh context;每条 check 独立上下文(不让整体印象污染逐条判定);判定者看不到任何历史结论。**默认紧随 record**(practice 会话 spawn fresh-context 子代理即时判,反馈按 session 粒度,ADR-0008);也可延后攒批——trial 一落地事实即安全,grading 何时补都行。
 
 ### 4.8 state/health.json — topic 健康度(第三层:完全派生)
 
@@ -277,12 +277,12 @@ checks:
       "task_ref": "flash-sale-idempotency-v1",
       "topic": "idempotency",
       "reason": "weight 最高的 topic;unseen 通过 1/3;本题未做过且为 unseen",
-      "forge_needed": false }
+      "create_needed": false }
   ]
 }
 ```
 
-`next` 是**选题器**:从题库选"weight 高 × 健康差 × 未做过(优先 unseen/variant)"的题;题库无合适题时输出 `forge_needed: true`,由 evalme-forge 补题。至多 3 条;只排序 + 文字理由,**不输出 ΔCapability 预估**。
+`next` 是**选题器**:从题库选"weight 高 × 健康差 × 未做过(优先 unseen/variant)"的题;题库无合适题时输出 `create_needed: true`,由 evalme-create 补题。至多 3 条;只排序 + 文字理由,**不输出 ΔCapability 预估**。
 
 ---
 
@@ -363,7 +363,7 @@ stale    = 曾健康、现仅因 recency 失格 → 只标注,不排复测(ADR-0
 
 ### 6.2 `evalme task add [--stdin]`
 
-入库一道题(M2 出口)。校验:labels 在词表内、checks 非空、题系版本连续、schema 合法 → 写入 `tasks/`。reference_solution 质检(判定 Agent 跑 grader 应全 pass)是 evalme-forge 的前置门禁,CLI 不执行 LLM 步骤。`evalme task show <ref> [--prompt-only]`:取题;**`--prompt-only` 是 drill 主持的强制形态——主持人不许看 checks**(§7)。
+入库一道题(M2 出口)。校验:labels 在词表内、checks 非空、题系版本连续、schema 合法 → 写入 `tasks/`。reference_solution 质检(判定 Agent 跑 grader 应全 pass)是 evalme-create 的前置门禁,CLI 不执行 LLM 步骤。`evalme task show <ref> [--prompt-only]`:取题;**`--prompt-only` 是 practice 主持的强制形态——主持人不许看 checks**(§7)。
 
 ### 6.3 `evalme record`
 
@@ -371,7 +371,7 @@ stale    = 曾健康、现仅因 recency 失格 → 只标注,不排复测(ADR-0
 
 ### 6.4 `evalme grade <trial_id>`
 
-打分(M4)。前置:校验 transcript 哈希、trial 未撤销。CLI 输出 transcript + 该 task 的 grader + 适用的 common graders;**判定 Agent(fresh context)逐条 check 独立判定**,草稿经 CLI 校验(grader_ref 存在、verdict 合法、transcript_ref 行段真实非空)后追加 gradings。默认由 drill spawn 的子代理紧随 record 执行(ADR-0008);也可延后攒批,`assess`/`list` 报告待打分存货。
+打分(M4)。前置:校验 transcript 哈希、trial 未撤销。CLI 输出 transcript + 该 task 的 grader + 适用的 common graders;**判定 Agent(fresh context)逐条 check 独立判定**,草稿经 CLI 校验(grader_ref 存在、verdict 合法、transcript_ref 行段真实非空)后追加 gradings。默认由 practice spawn 的子代理紧随 record 执行(ADR-0008);也可延后攒批,`assess`/`list` 报告待打分存货。
 
 ### 6.5 `evalme assess`
 
@@ -383,11 +383,11 @@ stale    = 曾健康、现仅因 recency 失格 → 只标注,不排复测(ADR-0
 
 ### 6.7 `evalme next [--write]`
 
-选题器。`next`(打印):确定性输出 priority 短名单 + 每 topic 候选题(suite 内未做、优先 unseen/variant;无题则 `forge_needed`)。`next --write`:Agent 包装成至多 3 条 action(CLI 校验 task_ref 存在、topic 在词表、reason 非空)写入 plan.json。
+选题器。`next`(打印):确定性输出 priority 短名单 + 每 topic 候选题(suite 内未做、优先 unseen/variant;无题则 `create_needed`)。`next --write`:Agent 包装成至多 3 条 action(CLI 校验 task_ref 存在、topic 在词表、reason 非空)写入 plan.json。
 
 ### 6.8 `evalme exam [--size N]`
 
-组卷器(ADR-0009):确定性组一场整卷模拟面试。按 topic weight 降序轮转取题,每 topic 优先未尝试题系(would-be unseen/variant),跨 topic 去重;输出卷面(task_ref/topic/would_be_novelty)、建议 session_id、无题可选的 topic(forge_needed)。纯读、无 LLM、不写文件;与 next 的分工:next 答"单点练什么"(补最弱),exam 答"整场考什么"(加权覆盖)。消费方为 evalme-drill 的整场模拟流程。
+组卷器(ADR-0009):确定性组一场整卷模拟面试。按 topic weight 降序轮转取题,每 topic 优先未尝试题系(would-be unseen/variant),跨 topic 去重;输出卷面(task_ref/topic/would_be_novelty)、建议 session_id、无题可选的 topic(create_needed)。纯读、无 LLM、不写文件;与 next 的分工:next 答"单点练什么"(补最弱),exam 答"整场考什么"(加权覆盖)。消费方为 evalme-practice 的整场模拟流程。
 
 ### 6.9 `evalme sync [--message <m>] [--pull-only]`
 
@@ -406,17 +406,17 @@ stale    = 曾健康、现仅因 recency 失格 → 只标注,不排复测(ADR-0
 | Skill | 活动 | 模块 |
 |---|---|---|
 | **evalme-define** | 定标:topics(weight)起草与修订、词表治理;跨目标 list | M1 |
-| **evalme-forge** | 制题:按缺口出题 / 用户素材导入 / 任意材料抽题(工作收获→task) / imported-live 归一化 / grader(含 common)修订 / 参考答案质检 | M2 |
-| **evalme-drill** | 施测:取题(`--prompt-only`)→ 主持面试 → 产 transcript → **顺手 record** → spawn 盲判子代理,按 session 粒度反馈(ADR-0008) | M3 |
-| **evalme-grade** | 判定:fresh context 盲判,逐 check 独立;默认作为 drill 的子代理即时执行,独立会话消存货/重判为兜底;含 retract 支线 | M4 |
+| **evalme-create** | 创建题目:按缺口出题 / 用户素材导入 / 任意材料抽题(工作收获→task) / imported-live 归一化 / grader(含 common)修订 / 参考答案质检 | M2 |
+| **evalme-practice** | 练习:取题(`--prompt-only`)→ 主持面试 → 产 transcript → **顺手 record** → spawn 盲判子代理,按 session 粒度反馈(ADR-0008) | M3 |
+| **evalme-grade** | 判定:fresh context 盲判,逐 check 独立;默认作为 practice 的子代理即时执行,独立会话消存货/重判为兜底;含 retract 支线 | M4 |
 | **evalme-review** | 复盘:assess → explain → next;stale 与存货提醒 | M6 |
 
 **反锚定靠两道结构性隔离,不靠口头约定:**
 
 1. **预注册(时序隔离)**:grader 在作答前写定(generated/imported)。出题者想 teaching-to-test 也改不了已冻结的标准;`imported-live` 无此保护,以 origin 降权如实标注。
-2. **上下文边界(空间隔离)**:drill 主持人只见 `--prompt-only`(见了 checks 会无意识朝检查点引导);grade 判定者必须 fresh context(不继承主持过面试或看过 state/ 的上下文),且逐 check 独立判定。**隔离是上下文的,不是时间的**(ADR-0008):drill 会话 record 后即可 spawn fresh-context 子代理当场盲判(只传 trial_id),单题当场反馈、多题场次散场后统一反馈。真实面试在 skill 外发生,经 evalme-forge 归一化 + evalme-grade 入管。
+2. **上下文边界(空间隔离)**:practice 主持人只见 `--prompt-only`(见了 checks 会无意识朝检查点引导);grade 判定者必须 fresh context(不继承主持过面试或看过 state/ 的上下文),且逐 check 独立判定。**隔离是上下文的,不是时间的**(ADR-0008):practice 会话 record 后即可 spawn fresh-context 子代理当场盲判(只传 trial_id),单题当场反馈、多题场次散场后统一反馈。真实面试在 skill 外发生,经 evalme-create 归一化 + evalme-grade 入管。
 
-真人面试流:用户拿到 transcript → evalme-forge 归一化(反推题面、按词表起草 grader、用户确认)→ record(type=real_interview)→ grade。全程单一管道(ADR-0003)。
+真人面试流:用户拿到 transcript → evalme-create 归一化(反推题面、按词表起草 grader、用户确认)→ record(type=real_interview)→ grade。全程单一管道(ADR-0003)。
 
 ---
 
@@ -448,7 +448,7 @@ stale    = 曾健康、现仅因 recency 失格 → 只标注,不排复测(ADR-0
 
 1. **判分稳定性**:同一 transcript 重复盲判,check 级 verdict 一致率 > 80%?(含换文风重判——防构念无关方差)
 2. **判断可认可性**:用户能否通过 `explain` 的证据链理解并认可结论?(测量系统的命门)
-3. **制题可用性**:evalme-forge 产出的题 + grader,经参考答案质检后,一次可用率够高吗?imported-live 归一化的 grader 用户改动大吗?
-4. **端到端摩擦**:forge → drill → grade → review 一整轮,用户第三周还在喂数据吗?(个人系统头号死因是弃用)
+3. **创建题目可用性**:evalme-create 产出的题 + grader,经参考答案质检后,一次可用率够高吗?imported-live 归一化的 grader 用户改动大吗?
+4. **端到端摩擦**:create → practice → grade → review 一整轮,用户第三周还在喂数据吗?(个人系统头号死因是弃用)
 
 验证优先级高于:精确评分模型、通用本体、统一分。
