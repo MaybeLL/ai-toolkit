@@ -388,7 +388,7 @@ stale    = 曾健康、现仅因 recency 失格 → 只标注,不排复测(ADR-0
 
 ### 6.8 `evalme exam [--size N]`
 
-组卷器(ADR-0009):确定性组一场整卷模拟面试。按 topic weight 降序轮转取题,每 topic 优先未尝试题系(would-be unseen/variant),跨 topic 去重;输出卷面(task_ref/topic/would_be_novelty)、建议 session_id、无题可选的 topic(create_needed)。纯读、无 LLM、不写文件;与 next 的分工:next 答"单点练什么"(补最弱),exam 答"整场考什么"(加权覆盖)。消费方为 evalme-practice 的整场模拟流程。
+组卷器(ADR-0009):确定性组一场整卷模拟面试。按 topic weight 降序轮转取题,每 topic 优先未尝试题系(would-be unseen/variant),跨 topic 去重;输出卷面(task_ref/topic/would_be_novelty)、**本次调用新生成且不复用 evidence clock 的**建议 session_id、无题可选的 topic(create_needed)。选题纯读、确定性、无 LLM、不写文件;session_id 是新场次的运行身份,不属于可复现的选题结果。与 next 的分工:next 答"单点练什么"(补最弱),exam 答"整场考什么"(加权覆盖)。消费方为 evalme-practice 的整场模拟流程。
 
 ### 6.9 `evalme sync [--message <m>] [--pull-only]`
 
@@ -415,7 +415,7 @@ stale    = 曾健康、现仅因 recency 失格 → 只标注,不排复测(ADR-0
 **反锚定靠两道结构性隔离,不靠口头约定:**
 
 1. **预注册(时序隔离)**:grader 在作答前写定(generated/imported)。出题者想 teaching-to-test 也改不了已冻结的标准;`imported-live` 无此保护,以 origin 降权如实标注。
-2. **上下文边界(空间隔离)**:practice 主持人只见 `--prompt-only`(见了 checks 会无意识朝检查点引导);grade 判定者必须 fresh context(不继承主持过面试或看过 state/ 的上下文),且逐 check 独立判定。**隔离是上下文的,不是时间的**(ADR-0008):practice 会话 record 后即可 spawn fresh-context 子代理当场盲判(只传 trial_id),单题当场反馈、多题场次散场后统一反馈。真实面试在 skill 外发生,经 evalme-create 归一化 + evalme-grade 入管。
+2. **上下文边界(空间隔离)**:practice 主持人本身也必须 fresh context,只见 `--prompt-only`;只要当前会话曾看过 grader、reference_solution 或历史结论,就必须换新会话主持。grade 判定者同样必须 fresh context(不继承主持过面试或看过 state/ 的上下文),且逐 check 独立判定。**隔离是上下文的,不是时间的**(ADR-0008):practice 会话 record 后即可 spawn fresh-context 子代理当场盲判(只传 trial_id),单题当场反馈、多题场次散场后统一反馈。主持采用逐问披露:每回合一个主问题、每次回答最多一个中立追问,不提前展示后续问题;任何方向性引导都必须如实记为 hints。真实面试在 skill 外发生,经 evalme-create 归一化 + evalme-grade 入管。
 
 真人面试流:用户拿到 transcript → evalme-create 归一化(反推题面、按词表起草 grader、用户确认)→ record(type=real_interview)→ grade。全程单一管道(ADR-0003)。
 

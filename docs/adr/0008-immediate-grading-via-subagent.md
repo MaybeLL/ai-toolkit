@@ -26,7 +26,10 @@
 
 ## 隔离论证
 
-盲判两道墙均未破:
+主持与盲判的隔离墙均未破:
+- 主持侧:practice 必须从 clean context 开始,只能读取 prompt-only。曾创建这道题、
+  看过 grader/reference_solution 或历史结论的会话不能切换角色继续主持;必须新开上下文,
+  只传 goal + task_ref。主持逐问披露,方向性引导如实记 hints。
 - 输入侧:子代理 fresh context,材料只来自 CLI 打印模式(transcript + graders,
   无历史结论);trial_id 本身不携带判断。
 - grader 侧:预注册不变,标准仍是答题前冻结的。

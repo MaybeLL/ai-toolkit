@@ -23,8 +23,9 @@ skill 上增补,被否——应从新模型的自然用户活动出发重推。
 
 ## 划界依据
 
-- create / practice / grade 三者边界由反锚定强制:出题与主持之间靠预注册时序隔离,
-  主持与判分之间靠 fresh context 隔离,不可合并。
+- create / practice / grade 三者边界由反锚定强制:出题与主持之间不仅靠预注册时序隔离,
+  主持人也必须处于未看过 grader/reference_solution/历史结论的 fresh context;
+  主持与判分之间同样靠 fresh context 隔离,不可合并或在同一上下文切换角色。
 - practice 吞下 record(主持完顺手入库,会话闭环);imported-live 归一化归 create
   (它就是归一化工作流的家),transcript 随后直接交 grade。
 - define 与 review 都是目标层读写活动,若嫌五个多可合并为 goal-console;v1 先分开。

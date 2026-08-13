@@ -18,7 +18,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync, appendFileSync, readdirSync, realpathSync } from "node:fs";
 import { join, resolve, basename } from "node:path";
 import { homedir } from "node:os";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { execFileSync } from "node:child_process";
 
 // ---------------------------------------------------------------------------
@@ -1370,10 +1370,14 @@ function cmdExam(flags) {
     }
   }
 
+  // Selection is deterministic against the evidence clock. A session, however,
+  // is an operational identity for a new interview and must not be reused just
+  // because no newer trial has been recorded since the previous composition.
+  const runDate = new Date().toISOString().slice(0, 10);
   const out = {
     as_of: m.nowISO,
     size_requested: size,
-    session_id: `ses-exam-${m.nowISO.slice(0, 10)}`,
+    session_id: `ses-exam-${runDate}-${randomUUID().slice(0, 8)}`,
     paper,
     ...(createNeeded.length > 0 ? { create_needed: createNeeded } : {}),
     ...(paper.length < size ? { note: `task bank exhausted at ${paper.length} task(s); create more to fill the paper` } : {}),

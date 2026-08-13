@@ -29,8 +29,9 @@ topics      task +       transcript     per-check        assess → explain → 
   honestly down-weighted). Cross-cutting behaviors (e.g. communication) live in
   **common graders**, defined once and applied across all tasks. A task draft enters
   the bank only after the user explicitly approves that specific draft.
-- **evalme-practice** (M3) — host a mock interview from the bank. The interviewer sees the
-  prompt **only** (`--prompt-only`, never the checks), saves a verbatim neutral
+- **evalme-practice** (M3) — host a mock interview from the bank in a clean context. The
+  interviewer sees the prompt **only** (`--prompt-only`, never the checks), reveals one
+  question at a time, uses at most one neutral follow-up per answer, saves a verbatim neutral
   transcript (sha256-notarized), and records the trial immediately. Novelty
   (unseen/variant/familiar/repeat) is derived from history, never self-reported.
 - **evalme-grade** (M4) — blind, per-check verdicts (`pass|partial|fail|no-evidence`)
