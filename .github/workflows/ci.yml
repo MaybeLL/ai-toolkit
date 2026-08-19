@@ -48,6 +48,8 @@ jobs:
           set -euo pipefail
           SCRIPTS="$PWD/plugins/evalme/scripts"
           export EVALME_HOME="$PWD/plugins/evalme/examples/backend-system-design"
+          node "$SCRIPTS/evalme.mjs" status
+          node "$SCRIPTS/evalme.mjs" status --json > /dev/null
           node "$SCRIPTS/evalme.mjs" explain idempotency
           node "$SCRIPTS/evalme.mjs" exam --size 2
 

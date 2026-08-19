@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // evalme CLI v2 — deterministic core for the task-centric model (spec-v0.2).
-// Subcommands: init | list | task | grader | record | retract | grade | assess | explain | next | exam
+// Subcommands: init | list | status | task | grader | record | retract | grade | assess | explain | next | exam | sync
 //
 // Design notes (docs/SPEC.md, docs/adr/):
 // - Facts (transcripts/, data/trials.jsonl, data/gradings.jsonl) are append-only
@@ -544,6 +544,33 @@ function bandOf(score) {
   return "strong";
 }
 
+// --- plain-language display helpers (P2: coarse bands, no fake precision) ---
+const BAND_EMOJI = { strong: "✅", solid: "✅", uneven: "🟠", weak: "🔴" };
+const NOVELTY_CN = { unseen: "没做过", variant: "变式", familiar: "已见同类", repeat: "重复" };
+function bandEmoji(band) {
+  return BAND_EMOJI[band] ?? "—";
+}
+function noveltyCn(n) {
+  return NOVELTY_CN[n] ?? n;
+}
+function daysAgoText(iso, nowISO) {
+  const d = Math.round(daysBetween(iso, nowISO));
+  if (!Number.isFinite(d) || d <= 0) return "今天";
+  if (d < 30) return `${d} 天前`;
+  if (d < 365) return `${Math.round(d / 30)} 个月前`;
+  return `${Math.round(d / 365)} 年前`;
+}
+function collectWorkspaces(rootAbs) {
+  if (existsSync(join(rootAbs, "goal.yaml"))) return [rootAbs];
+  const out = [];
+  for (const ent of readdirSync(rootAbs, { withFileTypes: true })) {
+    if (!ent.isDirectory()) continue;
+    const child = join(rootAbs, ent.name);
+    if (existsSync(join(child, "goal.yaml"))) out.push(child);
+  }
+  return out.sort();
+}
+
 // ---------------------------------------------------------------------------
 // shared model computation (assess / explain / next all derive from this)
 // ---------------------------------------------------------------------------
@@ -800,7 +827,7 @@ function cmdInit(positional, flags) {
       (existsSync(join(abs, "..", ".git")) || existsSync(join(abs, ".git"))
         ? ""
         : `tip: 建议在 goal home 跑 git init + 私有远端——异地备份 + 跨设备同步(state/ 可 gitignore)\n`) +
-      `next: 与 Agent(evalme-define)起草 topics → evalme-create 创建题目 → evalme-practice 练习。\n`
+      `next: 说"定个目标"起草 topics → "出题"创建题目 → "练题"开始练习。\n`
   );
 }
 
@@ -1129,8 +1156,8 @@ function cmdAssess(flags) {
   const nTopics = Object.keys(m.topics).length;
   let msg = `assessed ${nTopics} topic(s) from ${m.units.length} evidence unit(s); state written (as_of=${m.nowISO})\n`;
   if (m.pendingGrading.length > 0)
-    msg += `⚠ ${m.pendingGrading.length} trial(s) await grading: ${m.pendingGrading.join(", ")}\n`;
-  if (coverageGaps.length > 0) msg += `⚠ topics with no tasks in the bank: ${coverageGaps.join(", ")} (create needed)\n`;
+    msg += `⚠ ${m.pendingGrading.length} 条练习还没打分: ${m.pendingGrading.join(", ")}\n`;
+  if (coverageGaps.length > 0) msg += `⚠ 题库没题可测: ${coverageGaps.join(", ")} (需要出题)\n`;
   for (const w of fresh.lines) msg += w + "\n";
   process.stdout.write(msg);
 }
@@ -1148,18 +1175,18 @@ function cmdExplain(positional, flags) {
   for (const u of t._internal.units) verifyTranscripts(wsDir, u.trial);
 
   const L = [];
-  L.push(`topic  ${topicId}${t.cross_cutting ? "  (cross-cutting)" : ""}`);
-  L.push(
-    `状态   band ${t.band ?? "—"}   confidence ${t.confidence}   ${t.healthy ? "✓ healthy" : `✗ deficit ${t.deficit}`}   mode ${t.mode}${t.stale ? "   ⚠ stale(距上次验证已久)" : ""}`
-  );
-  L.push(`覆盖   题库 ${t.coverage.suite.length} 题系,已尝试 ${t.coverage.attempted.length}${t.coverage.coverage_ok ? "" : "(覆盖不足)"};最近验证 ${t.last_verified ?? "从未"}`);
+  L.push(`topic  ${topicId}${t.cross_cutting ? "  (横切行为)" : ""}`);
+  const staleNote = t.stale && t.last_verified ? ` · ${daysAgoText(t.last_verified, m.nowISO)}没验证,结论可能过时` : "";
+  const modeNote = t.mode === "diagnose" ? "证据不足,先做题探明" : "建议练题";
+  L.push(`状态   ${t.band ? `${bandEmoji(t.band)} ${t.band}` : "—"} · ${t.healthy ? "达标" : "有缺口"}${staleNote} · ${modeNote}`);
+  L.push(`覆盖   题库 ${t.coverage.suite.length} 题系,已练 ${t.coverage.attempted.length}${t.coverage.coverage_ok ? "" : "(覆盖不足)"};最近验证 ${t.last_verified ? `${t.last_verified}(${daysAgoText(t.last_verified, m.nowISO)})` : "从未"}`);
   const nv = t.by_novelty;
   const nvLine = ["unseen", "variant", "familiar", "repeat"]
     .filter((k) => nv[k])
-    .map((k) => `${k} ${nv[k].passed}/${nv[k].trials} 过`)
-    .join(",  ");
-  L.push(`分层   ${nvLine || "(无已打分 trial)"}   ← dimension 轴的继承人(ADR-0005)`);
-  if (t.must_pass_failures.length > 0) L.push(`门槛   未解决的 must_pass 失败: ${t.must_pass_failures.join("; ")}`);
+    .map((k) => `${NOVELTY_CN[k] ?? k} ${nv[k].passed}/${nv[k].trials} 过`)
+    .join(" · ");
+  L.push(`分层   ${nvLine || "(还没有已打分的练习)"}`);
+  if (t.must_pass_failures.length > 0) L.push(`门槛   还有未过关的必过项: ${t.must_pass_failures.join("; ")}`);
   L.push("");
   L.push("证据(按权重排序):");
   const units = [...t._internal.units].sort((a, b) => b.w - a.w);
@@ -1430,15 +1457,7 @@ function cmdList(positional, flags) {
   // (or newer data) is reflected instead of answering from a stale local tree.
   const fresh = freshen(flags, { allowPull: true });
 
-  const wsDirs = [];
-  if (existsSync(join(rootAbs, "goal.yaml"))) wsDirs.push(rootAbs);
-  else {
-    for (const ent of readdirSync(rootAbs, { withFileTypes: true })) {
-      if (!ent.isDirectory()) continue;
-      const child = join(rootAbs, ent.name);
-      if (existsSync(join(child, "goal.yaml"))) wsDirs.push(child);
-    }
-  }
+  const wsDirs = collectWorkspaces(rootAbs);
   if (wsDirs.length === 0) die(`no goals found under ${rootAbs} (looked for goal.yaml)`);
 
   const goals = wsDirs.map((d) => summarizeGoal(d));
@@ -1471,9 +1490,147 @@ function cmdList(positional, flags) {
     }
     meta.push(`assessed as_of ${g.as_of}`);
     L.push(`    ${meta.join("   ")}`);
-    L.push(`    topics ${g.topics} | unhealthy ${g.unhealthy}${g.pending_grading > 0 ? ` | ⚠ ${g.pending_grading} trial(s) await grading` : ""}`);
-    if (g.top) L.push(`    top gap  ${g.top.topic}  priority ${g.top.priority}  [${g.top.mode}]${g.top.stale ? "  ⚠ stale" : ""}`);
+    L.push(`    topics ${g.topics} | unhealthy ${g.unhealthy}${g.pending_grading > 0 ? ` | ⚠ ${g.pending_grading} 条待打分` : ""}`);
+    if (g.top)
+      L.push(`    top gap  ${g.top.topic}  ${bandEmoji(bandOf(g.top.priority))} ${bandOf(g.top.priority)}  [${g.top.mode}]${g.top.stale ? "  ⚠ 很久没验证" : ""}`);
     else L.push(`    ✓ all topics healthy`);
+  }
+  process.stdout.write(L.join("\n") + "\n");
+}
+
+// ---------------------------------------------------------------------------
+// status — the "现在该干嘛" entry (P1). Read-only, no LLM, no state writes:
+// fresh projection from facts + pending work + next-action suggestions.
+// ---------------------------------------------------------------------------
+function cmdStatus(flags) {
+  const rootAbs = resolveHome();
+  if (!existsSync(rootAbs)) {
+    process.stdout.write(
+      `还没有 EvalMe 数据目录:${rootAbs}\n` +
+        `首次使用说"定个目标"即可,或手动:\n` +
+        `  evalme.mjs init --goal-id <id> [--title <标题>]\n`
+    );
+    return;
+  }
+  const fresh = freshen(flags, { allowPull: true });
+  const wsDirs = collectWorkspaces(rootAbs);
+  if (wsDirs.length === 0) {
+    for (const l of fresh.lines) process.stdout.write(l + "\n");
+    process.stdout.write(
+      `在 ${rootAbs} 下没找到任何目标(没有 goal.yaml)。\n` +
+        `首次使用说"定个目标"即可,或手动:\n` +
+        `  evalme.mjs init --goal-id <id> [--title <标题>]\n`
+    );
+    return;
+  }
+
+  // Multi-goal without --goal: compact overview + hint to drill down.
+  if (!flags.goal && wsDirs.length > 1) {
+    const goals = wsDirs.map((d) => summarizeGoal(d)).sort((a, b) => {
+      const ap = a.top ? a.top.priority : -1;
+      const bp = b.top ? b.top.priority : -1;
+      return bp - ap;
+    });
+    const L = [...fresh.lines, "", `有 ${goals.length} 个目标:`];
+    for (const g of goals) {
+      L.push(`  ${g.goal_id}   ${g.title}`);
+      if (!g.assessed) {
+        L.push(`    (还没算过,跑一次 evalme.mjs assess)`);
+        continue;
+      }
+      L.push(`    topics ${g.topics} | 不达标 ${g.unhealthy}${g.pending_grading > 0 ? ` | ⚠ ${g.pending_grading} 条待打分` : ""}`);
+      if (g.top)
+        L.push(`    最弱  ${g.top.topic}  ${bandEmoji(bandOf(g.top.priority))} ${bandOf(g.top.priority)}  [${g.top.mode}]${g.top.stale ? "  ⚠ 很久没验证" : ""}`);
+      else L.push(`    ✓ 全部达标`);
+    }
+    L.push("", `想看单个目标的详细建议:加 --goal <id> 再看一次。`);
+    process.stdout.write(L.join("\n") + "\n");
+    return;
+  }
+
+  const wsDir = flags.goal ? ws(flags) : wsDirs[0];
+  const m = computeModel(wsDir, flags);
+  const goal = m.goal;
+  const L = [...fresh.lines, ""];
+  const gid = goal.goal_id ?? basename(wsDir);
+  const dleft = goal.target_date ? Math.round(daysBetween(new Date().toISOString(), goal.target_date)) : NaN;
+  L.push(`🎯 ${goal.title ?? gid}${goal.target_date ? `  (目标日期 ${goal.target_date}${Number.isFinite(dleft) ? `,剩 ${Math.max(0, dleft)} 天` : ""})` : ""}`);
+  L.push("");
+  L.push("领域健康度:");
+
+  const topicIds = Object.keys(m.topics).sort((a, b) => {
+    const A = m.topics[a],
+      B = m.topics[b];
+    if (A.healthy !== B.healthy) return A.healthy ? 1 : -1;
+    if (B.priority !== A.priority) return B.priority - A.priority;
+    return a.localeCompare(b);
+  });
+  for (const id of topicIds) {
+    const t = m.topics[id];
+    const head = t.healthy ? "✅" : "⚠️ ";
+    const band = t.band ?? "—";
+    const detail = t.last_verified ? `最近验证 ${daysAgoText(t.last_verified, m.nowISO)}` : "还没练过";
+    const nvParts = ["unseen", "variant"]
+      .filter((k) => t.by_novelty[k])
+      .map((k) => `${NOVELTY_CN[k]} ${t.by_novelty[k].passed}/${t.by_novelty[k].trials} 过`);
+    L.push(`  ${head} ${band.padEnd(9)} ${id}${t.cross_cutting ? "(横切)" : ""}   ${detail}${nvParts.length ? ` · ${nvParts.join(" · ")}` : ""}`);
+  }
+
+  const pending = m.pendingGrading;
+  if (pending.length > 0)
+    L.push(`待打分:${pending.length} 条练习还没打分(${pending.slice(0, 3).join(", ")}${pending.length > 3 ? ", …" : ""})`);
+  const gaps = topicIds.filter((id) => !m.topics[id].cross_cutting && m.topics[id].coverage.suite.length === 0);
+  if (gaps.length > 0) L.push(`缺题:${gaps.join(", ")} 题库里还没有题`);
+  L.push("");
+  L.push("建议下一步:");
+  const actions = [];
+  let unhealthyCount = 0;
+  for (const id of topicIds) {
+    const t = m.topics[id];
+    if (!t.healthy) unhealthyCount++;
+    if (actions.length >= 5 || t.healthy || t.cross_cutting) continue;
+    const attempted = new Set(t.coverage.attempted);
+    const cand = t.coverage.suite
+      .filter((fam) => !attempted.has(fam))
+      .map((fam) => {
+        const doc = m.latestTasks.get(fam);
+        const wouldBe = doc?.variant_of && attempted.has(String(doc.variant_of)) ? "variant" : "unseen";
+        return { task_ref: doc?._ref, would_be_novelty: wouldBe };
+      });
+    if (cand.length > 0) {
+      actions.push(`练 ${id} 的 ${cand[0].task_ref}(${noveltyCn(cand[0].would_be_novelty)}场景,最弱缺口)`);
+    } else if (t.coverage.suite.length > 0) {
+      actions.push(`给 ${id} 出变式题(已做过 ${attempted.size} 题系,陌生场景还没过关)`);
+    }
+  }
+  if (pending.length > 0) actions.push(`给 ${pending.length} 条待打分练习补打分`);
+  for (const id of gaps) actions.push(`给 ${id} 出题(题库为空)`);
+  if (actions.length === 0) {
+    if (unhealthyCount > 0)
+      L.push("  有缺口但没有可直接推进的动作:说\"复盘\"看证据链,或\"出题\"补题。");
+    else L.push("  全部达标,没有欠账。练一道保持手感,或说\"复盘\"看证据链。");
+  } else {
+    actions.slice(0, 5).forEach((a, i) => L.push(`  ${i + 1}. ${a}`));
+    L.push(`  其他:说"复盘"看证据链,"打分"补判定,"出题"扩题库。`);
+  }
+  if (flags.json) {
+    process.stdout.write(
+      JSON.stringify(
+        {
+          root: rootAbs,
+          goal_id: gid,
+          as_of: m.nowISO,
+          sync: fresh.lines,
+          topics: stripInternal(m.topics),
+          pending_grading: pending,
+          coverage_gaps: gaps,
+          actions,
+        },
+        null,
+        2
+      ) + "\n"
+    );
+    return;
   }
   process.stdout.write(L.join("\n") + "\n");
 }
@@ -1489,7 +1646,7 @@ function cmdSync(positional, flags) {
   if (!debt) {
     process.stdout.write(
       `${root} is not a git repository — nothing to sync.\n` +
-        `Enable sync: git init + private remote (evalme-define walks you through it).\n`
+        `Enable sync: git init + private remote (the 定目标 flow walks you through it).\n`
     );
     return;
   }
@@ -1568,6 +1725,9 @@ switch (sub) {
   case "list":
     cmdList(positional, flags);
     break;
+  case "status":
+    cmdStatus(flags);
+    break;
   case "task": {
     const verb = positional.shift();
     if (verb === "add") cmdTaskAdd(flags);
@@ -1608,6 +1768,6 @@ switch (sub) {
   default:
     die(
       `unknown subcommand: ${sub ?? "(none)"}\n` +
-        `usage: evalme.mjs <init|list|task|grader|record|retract|grade|assess|explain|next|exam|sync> [--goal <id>] ...`
+        `usage: evalme.mjs <init|list|status|task|grader|record|retract|grade|assess|explain|next|exam|sync> [--goal <id>] ...`
     );
 }
