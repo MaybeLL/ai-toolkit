@@ -13,15 +13,19 @@ The pipeline (spec-v0.2, task-centric — see [docs/SPEC.md](../../docs/SPEC.md)
 
 ```
 define      create       practice       grade            review
-定标    →   创建题目  →   练习      →    判定       →     复盘
-topics      task +       transcript     per-check        assess → explain → next
-词表        grader       + trial        blind verdicts   健康度   证据链    选题
+定标    →   出题    →    练习     →    打分    →     复盘
+目标+词表    题+grader   逐字稿+trial   逐 check 盲判   assess → explain → next
 ```
 
-- **evalme-define** (M1) — draft the goal's `topics` list: relative weights and
+**One entry, five flows.** Users never pick a phase by name: a single `evalme` skill
+routes on intent (练题 / 看进度 / 定目标 / 出题 / 打分), and `status` answers
+"what now" in one command. Practice and grading run in fresh subagent contexts
+where the host supports it, so session hygiene is the system's job, not the user's.
+
+- **define** (M1) — draft the goal's `topics` list: relative weights and
   flags, and the authoritative label vocabulary. No numeric score lines: passing is
   extensional (recent pass rate on unseen/variant tasks), not "reach 0.75".
-- **evalme-create** (M2) — build the task bank. Each task = prompt + **preregistered
+- **create** (M2) — build the task bank. Each task = prompt + **preregistered
   grader** (behavior-anchored checks, optional `must_pass`) + labels + difficulty +
   reference solution (QA: the reference must pass its own grader). Three origins:
   `generated` (LLM fills a gap), `imported` (user-supplied question, grader written
@@ -29,15 +33,15 @@ topics      task +       transcript     per-check        assess → explain → 
   honestly down-weighted). Cross-cutting behaviors (e.g. communication) live in
   **common graders**, defined once and applied across all tasks. A task draft enters
   the bank only after the user explicitly approves that specific draft.
-- **evalme-practice** (M3) — host a mock interview from the bank in a clean context. The
+- **practice** (M3) — host a mock interview from the bank in a clean context. The
   interviewer sees the prompt **only** (`--prompt-only`, never the checks), reveals one
   question at a time, uses at most one neutral follow-up per answer, saves a verbatim neutral
   transcript (sha256-notarized), and records the trial immediately. Novelty
   (unseen/variant/familiar/repeat) is derived from history, never self-reported.
-- **evalme-grade** (M4) — blind, per-check verdicts (`pass|partial|fail|no-evidence`)
+- **grade** (M4) — blind, per-check verdicts (`pass|partial|fail|no-evidence`)
   in a fresh context, each with a line-referenced evidence quote. Batchable: trials
   are safe the moment they land; gradings can be added whenever.
-- **evalme-review** (M6) — `assess` (deterministic recompute) → `explain` (evidence
+- **review** (M6) — `assess` (deterministic recompute) → `explain` (evidence
   chain, novelty breakdown, growth curves, stale markers) → `next` (a task picker,
   not a task inventor: it selects unattempted unseen/variant tasks for the weakest
   topics, or emits `create_needed`).
@@ -87,7 +91,7 @@ After a Claude Code or Codex installation, start a new session before invoking a
   pi install git:github.com/MaybeLL/ai-toolkit
   ```
 
-  Invoke a skill via e.g. `/skill:evalme-practice` or `/skill:evalme-review`.
+  Invoke the skill via e.g. `/skill:evalme` — one entry for everything (练题/看进度/出题/定目标/打分).
 
 For a local checkout, register the repo root as a local marketplace.
 
@@ -100,6 +104,7 @@ A complete example workspace lives at
 ```sh
 cd plugins/evalme/scripts
 export EVALME_HOME=../examples/backend-system-design
+node evalme.mjs status        # the "what now" surface: health, backlog, next actions
 node evalme.mjs explain idempotency
 # recompute from facts and confirm it's byte-identical:
 rm -rf "$EVALME_HOME/state" && node evalme.mjs assess

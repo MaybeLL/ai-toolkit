@@ -9,19 +9,20 @@
 > 核心问题:**我距离目标还有多远?**——答案必须可信、可查、可复算。
 > "下一步练什么"(next)是测量基础设施之上的便利视图,不是系统的灵魂。
 
-五环节流水线(spec-v0.2,task 中心模型):
+五环节流水线(spec-v0.2,task 中心模型)——**一个入口,五个流程**:用户只说人话(练题/看进度/定目标/出题/打分),`evalme` skill 自动路由;`status` 一条命令回答"现在该干嘛"。
 
 ```
-定标          创建题目        练习            判定             复盘
-evalme-define → evalme-create → evalme-practice → evalme-grade  →   evalme-review
-topics 词表    题面+grader     主持→逐字稿      逐 check 盲判     assess→explain→next
+定标       出题          练习          打分           复盘
+define → create → practice → grade → review
+目标+词表   题+grader    主持→逐字稿   逐 check 盲判   assess→explain→next
 ```
 
-- **evalme-define** — 定标:goal.yaml 的 topics 清单 = 优先级声明(weight)+ label 权威词表。**没有数值分数线**:达标是外延式的(该 topic 下 unseen/variant 题的近期通过情况)。
-- **evalme-create** — 创建题目:题面 + **预注册 grader**(行为锚定的 checks,可选 must_pass)+ labels + difficulty + 参考答案质检；**草案须经用户明确确认才入库**。三种来源:`generated`(LLM 按缺口出题)/ `imported`(用户上传,作答前补 grader)/ `imported-live`(真实面试事后归一化,如实降权)。横切行为(如 communication)由 **common grader** 承载,定义一次、跨题复用。
-- **evalme-practice** — 练习:从题库取题主持,主持人**只看题面**(`--prompt-only`,绝不看 checks),产逐字中立 transcript(SHA-256 公证)并立即 record。novelty(unseen/variant/familiar/repeat)由引擎按题系历史派生,不接受自报。
-- **evalme-grade** — 判定:全新上下文盲判,逐条 check 独立给 verdict(pass/partial/fail/no-evidence)+ 行号证据。可攒批:trial 落地即安全,grading 何时补都行。
-- **evalme-review** — 复盘:`assess`(确定性重算)→ `explain`(证据链、novelty 分层、成长曲线、stale 标注)→ `next`(选题器:从题库选未做过的 unseen/variant 题,无题可选则 `create_needed`)。
+- **evalme(入口)** — 意图路由 + 公共协议(数据位置/同步/会话卫生);练习与打分默认在 fresh 子代理里跑,用户不用管"哪个会话能干什么"。
+- **define** — 定标:goal.yaml 的 topics 清单 = 优先级声明(weight)+ label 权威词表。**没有数值分数线**:达标是外延式的(该 topic 下 unseen/variant 题的近期通过情况)。
+- **create** — 出题:题面 + **预注册 grader**(行为锚定的 checks,可选 must_pass)+ labels + difficulty + 参考答案质检；**草案须经用户明确确认才入库**。三种来源:`generated`(LLM 按缺口出题)/ `imported`(用户上传,作答前补 grader)/ `imported-live`(真实面试事后归一化,如实降权)。横切行为(如 communication)由 **common grader** 承载,定义一次、跨题复用。
+- **practice** — 练习:从题库取题主持,主持人**只看题面**(`--prompt-only`,绝不看 checks),产逐字中立 transcript(SHA-256 公证)并立即 record。novelty(unseen/variant/familiar/repeat)由引擎按题系历史派生,不接受自报。
+- **grade** — 打分:全新上下文盲判,逐条 check 独立给 verdict(pass/partial/fail/no-evidence)+ 行号证据。可攒批:trial 落地即安全,grading 何时补都行。
+- **review** — 复盘:`assess`(确定性重算)→ `explain`(证据链、novelty 分层、成长曲线、stale 标注)→ `next`(选题器:从题库选未做过的 unseen/variant 题,无题可选则 `create_needed`)。
 
 ### 系统不变量
 
@@ -37,7 +38,7 @@ topics 词表    题面+grader     主持→逐字稿      逐 check 盲判     
 
 本仓库是 MaybeLL 的个人 agent toolkit，以 **plugin 为单元**开发自己用的能力：
 
-- [plugins/evalme](plugins/evalme) — 能力评测系统（CLI + 5 个 skill）
+- [plugins/evalme](plugins/evalme) — 能力评测系统（CLI + 1 个入口 skill，内含 5 个流程）
 - [plugins/productivity](plugins/productivity) — 个人生产力 skill 合集（10 个 skill，纯 skill 无代码）
 
 新增能力时按类型放：plugin（成套功能）、mcp（协议服务）、skill（纯技能）、cli（独立命令）。
@@ -60,7 +61,7 @@ claude plugin install evalme@maybell-plugins
 claude plugin install productivity@maybell-plugins
 ```
 
-安装后**完全退出并重新打开 Claude Code**，再开一个新会话。可用 `/plugin` 查看已安装插件；新会话中应能调用 `evalme-define` 等 skill。
+安装后**完全退出并重新打开 Claude Code**，再开一个新会话。可用 `/plugin` 查看已安装插件；新会话中应能调用 `evalme` skill。
 
 ### Codex
 
@@ -72,7 +73,7 @@ codex plugin add evalme@maybell-plugins
 codex plugin add productivity@maybell-plugins
 ```
 
-安装后开一个**新 Codex 会话**，让新安装的 skill 被发现。可用 `codex plugin list` 检查 marketplace 中的可用插件；新会话中应能调用 `$evalme-define` 等 skill。
+安装后开一个**新 Codex 会话**，让新安装的 skill 被发现。可用 `codex plugin list` 检查 marketplace 中的可用插件；新会话中应能调用 `$evalme` skill。
 
 ### Pi
 
@@ -82,7 +83,7 @@ codex plugin add productivity@maybell-plugins
 pi install git:github.com/MaybeLL/ai-toolkit
 ```
 
-若只想让当前项目使用它，追加 `-l`，即 `pi install git:github.com/MaybeLL/ai-toolkit -l`。重新启动 Pi 后，可用 `/skill:evalme-define` 开始。
+若只想让当前项目使用它，追加 `-l`，即 `pi install git:github.com/MaybeLL/ai-toolkit -l`。重新启动 Pi 后，可用 `/skill:evalme` 开始。
 
 三个宿主都只需要 Node.js。EvalMe 的用户数据不保存到当前项目，而是保存到 goal home（`EVALME_HOME` 或默认 `~/evalme/`）。
 
@@ -94,7 +95,7 @@ pi install git:github.com/MaybeLL/ai-toolkit
 | Codex | 按 plugin（`codex plugin add <name>@maybell-plugins`） | 可以，逐个装 |
 | Pi | 按 package（整个仓库） | 一次全装；可加 `-l` 限定当前项目 |
 
-Pi 以**仓库为粒度**：`pi install git:github.com/MaybeLL/ai-toolkit` 会加载 `package.json` 的 `pi.skills` 里声明的**所有** skill（目前是 evalme 的 5 个 + productivity 的 10 个）。新增 plugin 时把它加进 `pi.skills` 数组即可，pi 端新开会话自动可见。
+Pi 以**仓库为粒度**：`pi install git:github.com/MaybeLL/ai-toolkit` 会加载 `package.json` 的 `pi.skills` 里声明的**所有** skill（目前是 evalme 的 1 个 + productivity 的 10 个）。新增 plugin 时把它加进 `pi.skills` 数组即可，pi 端新开会话自动可见。
 
 若想只让 pi 加载部分 skill，两种方式：
 
@@ -118,7 +119,7 @@ claude plugin install productivity@maybell-plugins
 ```
 
 然后**完全退出并重开 Claude Code**——新 skill 只有整会话重启后才注册,`/reload-plugins` 不够。
-重启后 evalme 应看到五个 skill:`evalme-define` / `evalme-create` / `evalme-practice` / `evalme-grade` / `evalme-review`;productivity 应看到十个 skill(`explain-clearly` / `grilling` / `wait-what` 等)。
+重启后 evalme 应看到一个 skill:`evalme`;productivity 应看到十个 skill(`explain-clearly` / `grilling` / `wait-what` 等)。
 
 仍不出现时按此排查:
 
@@ -134,7 +135,8 @@ claude plugin install productivity@maybell-plugins
 ```bash
 cd plugins/evalme/scripts
 export EVALME_HOME=../examples/backend-system-design
-node evalme.mjs explain idempotency
+node evalme.mjs status              # “现在该干嘛”:健康度 + 建议动作
+node evalme.mjs explain idempotency # 证据链:每条结论能回溯到逐字稿行号
 # 从事实重算,验证逐字节一致(INV-2):
 rm -rf "$EVALME_HOME/state" && node evalme.mjs assess
 ```
