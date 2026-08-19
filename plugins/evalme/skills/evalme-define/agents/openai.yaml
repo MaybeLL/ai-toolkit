@@ -1,4 +1,0 @@
-interface:
-  display_name: "EvalMe Define"
-  short_description: "Define a goal: topics with relative weights — the label vocabulary everything else anchors to"
-  default_prompt: "Use $evalme-define to create a new goal workspace and draft its topics list with me."

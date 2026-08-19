@@ -1,4 +1,0 @@
-interface:
-  display_name: "EvalMe Grade"
-  short_description: "Grade blind: per-check verdicts with line-referenced evidence, in a fresh context; batchable"
-  default_prompt: "Use $evalme-grade to grade my ungraded trials, one check at a time, blind."

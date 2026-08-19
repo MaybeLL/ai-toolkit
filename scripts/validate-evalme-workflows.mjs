@@ -7,9 +7,9 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repo = join(dirname(fileURLToPath(import.meta.url)), "..");
-const createSkill = readFileSync(join(repo, "plugins/evalme/skills/evalme-create/SKILL.md"), "utf8");
-const practiceSkill = readFileSync(join(repo, "plugins/evalme/skills/evalme-practice/SKILL.md"), "utf8");
-const generated = createSkill.match(/^### 出题\(generated\)\n([\s\S]*?)(?=^### )/m)?.[1];
+const createSkill = readFileSync(join(repo, "plugins/evalme/skills/evalme/phases/create.md"), "utf8");
+const practiceSkill = readFileSync(join(repo, "plugins/evalme/skills/evalme/phases/practice.md"), "utf8");
+const generated = createSkill.match(/^##+ 出题\(generated\)\n([\s\S]*?)(?=^##+ )/m)?.[1];
 
 if (!generated) fail("generated section exists in evalme-create");
 

@@ -1,4 +1,0 @@
-interface:
-  display_name: "EvalMe Create"
-  short_description: "Create tasks: prompt + preregistered grader + reference-solution QA; import questions; normalize real interviews"
-  default_prompt: "Use $evalme-create to create a new task for my weakest topic, with a preregistered grader I confirm."

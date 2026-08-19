@@ -1,4 +1,0 @@
-interface:
-  display_name: "EvalMe Practice"
-  short_description: "Host a clean-context, one-question-at-a-time mock interview, then record and blind-grade it"
-  default_prompt: "Use $evalme-practice in a clean context to ask one question at a time, record my interview, and hand it to a fresh-context grader."

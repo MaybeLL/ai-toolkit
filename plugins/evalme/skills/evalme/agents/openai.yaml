@@ -1,0 +1,4 @@
+interface:
+  display_name: "EvalMe"
+  short_description: "Practice, review, create tasks, and define goals — capability measurement with evidence chains"
+  default_prompt: "Use $evalme to practice a task with instant feedback, or to check what I should do next."
