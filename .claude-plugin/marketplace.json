@@ -19,7 +19,7 @@
     {
       "name": "productivity",
       "source": "./plugins/productivity",
-      "description": "MaybeLL's personal productivity skill suite: explain, research, test, diagram, and safely inspect configuration.",
+      "description": "MaybeLL's personal productivity skill suite: explain clearly, grill plans, model domains, research, TDD, teach, draw diagrams, and more.",
       "category": "Productivity",
       "tags": [
         "productivity",

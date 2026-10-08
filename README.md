@@ -39,7 +39,7 @@ define → create → practice → grade → review
 本仓库是 MaybeLL 的个人 agent toolkit，以 **plugin 为单元**开发自己用的能力：
 
 - [plugins/evalme](plugins/evalme) — 能力评测系统（CLI + 1 个入口 skill，内含 5 个流程）
-- [plugins/productivity](plugins/productivity) — 个人生产力 skill 合集（11 个 skill，部分带本地辅助脚本）
+- [plugins/productivity](plugins/productivity) — 个人生产力 skill 合集（10 个 skill，纯 skill 无代码）
 
 新增能力时按类型放：plugin（成套功能）、mcp（协议服务）、skill（纯技能）、cli（独立命令）。
 
@@ -95,7 +95,7 @@ pi install git:github.com/MaybeLL/ai-toolkit
 | Codex | 按 plugin（`codex plugin add <name>@maybell-plugins`） | 可以，逐个装 |
 | Pi | 按 package（整个仓库） | 一次全装；可加 `-l` 限定当前项目 |
 
-Pi 以**仓库为粒度**：`pi install git:github.com/MaybeLL/ai-toolkit` 会加载 `package.json` 的 `pi.skills` 里声明的**所有** skill（目前是 evalme 的 1 个 + productivity 的 11 个）。新增 plugin 时把它加进 `pi.skills` 数组即可，pi 端新开会话自动可见。
+Pi 以**仓库为粒度**：`pi install git:github.com/MaybeLL/ai-toolkit` 会加载 `package.json` 的 `pi.skills` 里声明的**所有** skill（目前是 evalme 的 1 个 + productivity 的 10 个）。新增 plugin 时把它加进 `pi.skills` 数组即可，pi 端新开会话自动可见。
 
 若想只让 pi 加载部分 skill，两种方式：
 
@@ -119,7 +119,7 @@ claude plugin install productivity@maybell-plugins
 ```
 
 然后**完全退出并重开 Claude Code**——新 skill 只有整会话重启后才注册,`/reload-plugins` 不够。
-重启后 evalme 应看到一个 skill:`evalme`;productivity 应看到十一个 skill（包括 `explain-clearly`、`grilling`、`read-config-center`、`wait-what` 等）。
+重启后 evalme 应看到一个 skill:`evalme`;productivity 应看到十个 skill(`explain-clearly` / `grilling` / `wait-what` 等)。
 
 仍不出现时按此排查:
 
