@@ -9,7 +9,7 @@
   "interface": {
     "displayName": "Productivity",
     "shortDescription": "Personal productivity skills: explain, grill, model, research, TDD, teach, diagram.",
-    "longDescription": "A curated suite of personal productivity skills for deliberate work: explain-clearly (structured explanations), grilling / grill-me / grill-with-docs (stress-test plans), domain-modeling (ubiquitous language + ADRs), research (primary-source investigation), tdd (test-first development), teach (coached skill-building), and drawio (diagram authoring).",
+    "longDescription": "A curated suite of personal productivity skills for deliberate work: explain-clearly (structured explanations), grilling / grill-me / grill-with-docs (stress-test plans), domain-modeling (ubiquitous language + ADRs), research (primary-source investigation), tdd (test-first development), teach (coached skill-building), drawio (diagram authoring), and excalidraw-diagram-generator (flowcharts, architecture diagrams, and mind maps).",
     "developerName": "MaybeLL",
     "category": "Productivity",
     "capabilities": [
