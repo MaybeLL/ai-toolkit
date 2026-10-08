@@ -13,5 +13,9 @@ build/
 .idea/
 .vscode/
 
+# Python bytecode
+__pycache__/
+*.py[cod]
+
 # pi subagent scratch artifacts
 .pi-subagents/
