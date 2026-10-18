@@ -1,26 +1,25 @@
 {
-  "name": "evalme-pi-package",
+  "name": "ai-toolkit-pi-package",
   "version": "0.1.3",
   "private": true,
-  "description": "Pi package adapter for the EvalMe — a local-first, append-only capability measurement system organized like agent evals.",
+  "description": "MaybeLL's personal productivity skills for coding agents.",
   "license": "MIT",
   "keywords": [
     "pi-package",
-    "capability-measurement",
-    "evals",
-    "career-growth"
+    "productivity",
+    "skills",
+    "personal-toolkit"
   ],
   "type": "module",
   "pi": {
-    "extensions": [
-      "./extensions/evalme-pi.ts"
-    ],
     "skills": [
-      "./plugins/evalme/skills",
       "./plugins/productivity/skills"
     ]
   },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*"
+  },
+  "scripts": {
+    "check": "node scripts/validate-plugin-metadata.mjs"
   }
 }

@@ -1,21 +1,10 @@
 {
   "name": "maybell-plugins",
-  "description": "MaybeLL's agent plugins for deliberate, evidence-based growth.",
+  "description": "MaybeLL's personal agent tools and productivity skills.",
   "owner": {
     "name": "MaybeLL"
   },
   "plugins": [
-    {
-      "name": "evalme",
-      "source": "./plugins/evalme",
-      "description": "A local-first, append-only capability measurement system: task bank → trial → blind grading → evidence-chained topic health.",
-      "category": "Productivity",
-      "tags": [
-        "capability-measurement",
-        "evals",
-        "career-growth"
-      ]
-    },
     {
       "name": "productivity",
       "source": "./plugins/productivity",

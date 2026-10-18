@@ -15,44 +15,6 @@ permissions:
   contents: read
 
 jobs:
-  smoke:
-    name: Node smoke + INV-2 recompute
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v6
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-
-      - name: Syntax check the CLI
-        run: node --check plugins/evalme/scripts/evalme.mjs
-
-      - name: Recompute state and assert byte-identical (INV-2)
-        run: |
-          set -euo pipefail
-          SCRIPTS="$PWD/plugins/evalme/scripts"
-          SRC="$PWD/plugins/evalme/examples/backend-system-design"
-          WS="$RUNNER_TEMP/ws"
-          cp -R "$SRC" "$WS"
-          EVALME_HOME="$WS" node "$SCRIPTS/evalme.mjs" assess
-          diff "$SRC/state/health.json" "$WS/state/health.json"
-          diff "$SRC/state/task-index.json" "$WS/state/task-index.json"
-          echo "INV-2 holds: recomputed state is byte-identical to committed state."
-
-      - name: Explain and exam run
-        run: |
-          set -euo pipefail
-          SCRIPTS="$PWD/plugins/evalme/scripts"
-          export EVALME_HOME="$PWD/plugins/evalme/examples/backend-system-design"
-          node "$SCRIPTS/evalme.mjs" status
-          node "$SCRIPTS/evalme.mjs" status --json > /dev/null
-          node "$SCRIPTS/evalme.mjs" explain idempotency
-          node "$SCRIPTS/evalme.mjs" exam --size 2
-
   plugin-metadata:
     name: Plugin metadata
     runs-on: ubuntu-latest
@@ -68,6 +30,3 @@ jobs:
 
       - name: Validate manifests, marketplace entries, and Skills
         run: node scripts/validate-plugin-metadata.mjs
-
-      - name: Validate EvalMe workflow policies
-        run: node scripts/validate-evalme-workflows.mjs

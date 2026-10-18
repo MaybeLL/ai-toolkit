@@ -5,18 +5,6 @@
   },
   "plugins": [
     {
-      "name": "evalme",
-      "source": {
-        "source": "local",
-        "path": "./plugins/evalme"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "Productivity"
-    },
-    {
       "name": "productivity",
       "source": {
         "source": "local",

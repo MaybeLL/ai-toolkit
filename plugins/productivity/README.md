@@ -20,7 +20,7 @@ MaybeLL 的个人生产力技能合集。以 **skill** 为入口（无独立 CLI
 
 ## 定位
 
-本插件是"开发者的个人工具层"：与 `evalme`（领域系统）不同，这里的 skill 与具体业务无关，属于跨场景的通用能力。新增个人 skill 时放到 `skills/<name>/SKILL.md` 即可，插件会自动发现。
+本插件是"开发者的个人工具层"：与独立的 [EvalMe](https://github.com/MaybeLL/evalme)（领域系统）不同，这里的 skill 与具体业务无关，属于跨场景的通用能力。新增个人 skill 时放到 `skills/<name>/SKILL.md` 即可，插件会自动发现。
 
 ## Excalidraw 制图
 
