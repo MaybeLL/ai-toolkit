@@ -1,0 +1,48 @@
+name: Draft release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    concurrency:
+      group: release-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.20.0'
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check tag and main ancestry
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          test "$RELEASE_TAG" = "v$(node -p 'require("./package.json").version')"
+          git merge-base --is-ancestor HEAD origin/main
+          test -z "$(git status --porcelain)"
+      - run: npm ci --ignore-scripts
+      - run: npm run check
+      - run: npm test
+      - run: npm run package
+      - name: Create draft with verified assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          node scripts/release-notes.mjs > "$RUNNER_TEMP/release-notes.md"
+          python3 -c 'import json; assert not json.load(open("dist/release.json"))["dirty"]'
+          gh release create "$RELEASE_TAG" dist/* --verify-tag --draft --title "AI Toolkit $RELEASE_TAG" --notes-file "$RUNNER_TEMP/release-notes.md"

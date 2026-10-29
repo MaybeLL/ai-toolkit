@@ -8,7 +8,7 @@
     {
       "name": "productivity",
       "source": "./plugins/productivity",
-      "description": "MaybeLL's personal productivity skill suite: explain clearly, grill plans, model domains, research, TDD, teach, draw diagrams, and more.",
+      "description": "Reusable skills for software design, code review, research, learning, diagrams and video downloads.",
       "category": "Productivity",
       "tags": [
         "productivity",

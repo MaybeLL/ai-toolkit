@@ -1,0 +1,40 @@
+[
+  {
+    "id": "design-review",
+    "skill": "software-design-philosophy",
+    "prompt": "评审这个设计：每个调用方都必须先刷新令牌、重试一次，然后调用同一个 API。我们该怎么降低修改成本？",
+    "expect": ["定位调用者重复掌握的认证和重试知识", "说明集中处理与调用者策略的边界", "不承诺所有失败都可重试"]
+  },
+  {
+    "id": "small-fix",
+    "skill": "software-design-philosophy",
+    "prompt": "一个金额显示函数把 0 显示成空白，只修复这个缺陷，不改公共接口。",
+    "expect": ["从错误行为和边界值出发", "遵守局部修改范围", "不强制引入设计模式或全面重构"]
+  },
+  {
+    "id": "offline-source",
+    "skill": "software-design-philosophy",
+    "prompt": "断网环境下，用本地依据解释深模块和小模块的区别，并指出适用边界。",
+    "expect": ["读取包内 references/modules.md 等相关资料", "不要求联网阅读原书", "不把转述说成逐字引文"]
+  },
+  {
+    "id": "unrelated-request",
+    "skill": "software-design-philosophy",
+    "prompt": "帮我把‘明天上午十点开会’翻译成英语。",
+    "expect": ["不自动激活软件设计 Skill", "直接完成翻译"]
+  },
+  {
+    "id": "download-proof",
+    "skill": "video-download",
+    "prompt": "下载我提供的单个公开视频到指定临时目录。",
+    "inputs": "提供有下载权限的真实公开链接与空临时目录；需要 yt-dlp、ffmpeg/ffprobe 以及站点要求的依赖。",
+    "expect": ["确认单个视频范围", "交付非空成品与媒体流检查结果", "不把仅获取元数据说成下载完成", "不修改整机网络设置"]
+  },
+  {
+    "id": "combined-interview",
+    "skill": "grill-with-docs",
+    "prompt": "使用 grill-with-docs 帮我梳理订单和退款的领域模型。",
+    "inputs": "同时安装 grilling 和 domain-modeling。",
+    "expect": ["围绕关键决策提问", "在约定目录保存 ADR 或术语上下文", "不用缺失的 Skill 作为已执行步骤"]
+  }
+]

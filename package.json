@@ -1,6 +1,6 @@
 {
   "name": "ai-toolkit-pi-package",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "private": true,
   "description": "MaybeLL's personal productivity skills for coding agents.",
   "license": "MIT",
@@ -19,7 +19,23 @@
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*"
   },
+  "peerDependenciesMeta": {
+    "@earendil-works/pi-coding-agent": {
+      "optional": true
+    }
+  },
   "scripts": {
-    "check": "node scripts/validate-plugin-metadata.mjs"
+    "check": "node scripts/validate-plugin-metadata.mjs && node scripts/validate-skills.mjs",
+    "test": "node --test tests/*.test.mjs && npm run test:drawio",
+    "test:drawio": "node --test plugins/productivity/skills/drawio/scripts/dsl/*.test.js",
+    "package": "npm run check && python3 scripts/package-skills.py"
+  },
+  "devDependencies": {
+    "marked": "18.1.2",
+    "skills": "1.7.4",
+    "yaml": "2.9.1"
+  },
+  "engines": {
+    "node": ">=22.20.0"
   }
 }

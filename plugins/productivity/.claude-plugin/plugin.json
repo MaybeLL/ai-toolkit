@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "productivity",
-  "version": "0.1.3",
-  "description": "MaybeLL's personal productivity skill suite: explain clearly, grill plans, model domains, research, TDD, teach, draw diagrams, and more.",
+  "version": "0.2.0",
+  "description": "Reusable skills for software design, code review, research, learning, diagrams and video downloads.",
   "author": {
     "name": "MaybeLL"
   },
