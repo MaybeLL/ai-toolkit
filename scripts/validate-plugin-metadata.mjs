@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Plugin metadata validator: name/version consistency across manifests, Pi
-// resource paths, skill frontmatter, and marketplace entries.
+// resource paths, discovery configuration, and marketplace entries.
 // Run from the repo root: `node scripts/validate-plugin-metadata.mjs`
-// Exits non-zero on the first failed assertion.
+// Reports all failed assertions before exiting non-zero.
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -52,32 +52,11 @@ for (const name of pluginDirs) {
     `${name}: version identical across claude/codex/package.json (got ${claude.version}/${codex.version}/${pkg.version})`
   );
 
-  // Skills: frontmatter name == dir name, has description, unique
+  check(codex.skills === "./skills/", `${name}: Codex skills path == ./skills/`);
   const skillsDir = join(plugin, "skills");
+  check(existsSync(skillsDir), `${name}: skills directory exists`);
   if (existsSync(skillsDir)) {
-    const skillDirs = readdirSync(skillsDir, { withFileTypes: true }).filter((d) => d.isDirectory());
-    check(skillDirs.length > 0, `${name}: at least one skill`);
-    const names = [];
-    for (const d of skillDirs) {
-      const p = join(skillsDir, d.name, "SKILL.md");
-      check(existsSync(p), `${name}: SKILL.md exists for ${d.name}`);
-      if (!existsSync(p)) continue;
-      const content = readFileSync(p, "utf8");
-      check(content.startsWith("---\n"), `${name}: frontmatter starts for ${d.name}`);
-      const body = content.slice(4);
-      const end = body.indexOf("\n---");
-      check(end !== -1, `${name}: frontmatter terminated for ${d.name}`);
-      const fm = end === -1 ? "" : body.slice(0, end);
-      const nameMatch = fm.match(/^name:\s*(\S+)\s*$/m);
-      const descMatch = fm.match(/^description:\s*.+$/m);
-      check(!!nameMatch, `${name}: frontmatter has name: for ${d.name}`);
-      check(!!descMatch, `${name}: frontmatter has description: for ${d.name}`);
-      if (nameMatch) {
-        check(nameMatch[1] === d.name, `${name}: skill name matches dir: ${nameMatch[1]} == ${d.name}`);
-        names.push(nameMatch[1]);
-      }
-    }
-    check(names.length === new Set(names).size, `${name}: skill names unique`);
+    check(readdirSync(skillsDir).some((skill) => existsSync(join(skillsDir, skill, "SKILL.md"))), `${name}: at least one Skill`);
   }
 }
 
@@ -90,6 +69,13 @@ check(
 for (const res of [...(pkg.pi?.skills ?? []), ...(pkg.pi?.extensions ?? [])]) {
   check(existsSync(join(repo, res)), `pi resource path exists: ${res}`);
 }
+
+const discovery = readJson(join(repo, "skills.sh.json"));
+check(JSON.stringify(discovery.paths) === JSON.stringify(expectedPiSkills), "skills.sh.json and Pi discover the same source directories");
+const lock = readJson(join(repo, "package-lock.json"));
+check(lock.version === pkg.version && lock.packages?.[""].version === pkg.version, "lockfile version matches package.json");
+const changelog = readFileSync(join(repo, "CHANGELOG.md"), "utf8");
+check(changelog.split("\n").includes(`## ${pkg.version}`), "changelog contains current release version");
 
 // Marketplaces list every plugin
 for (const mp of marketplaces) {

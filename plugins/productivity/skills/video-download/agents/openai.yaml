@@ -1,0 +1,4 @@
+interface:
+  display_name: "视频下载"
+  short_description: "使用 yt-dlp 下载 B 站、YouTube 视频并验证成品文件"
+  default_prompt: "使用 $video-download 下载我提供的视频链接，并检查成品文件、报告保存位置和实际画质。"
