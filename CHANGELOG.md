@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0
+
+- video-download 增加只读依赖探测、明确的安装确认流程和本地安装指导；安装后复查，并按字幕/媒体与 YouTube 场景选择所需组件。
+
 ## 0.2.0
 
 - 保留原有 plugin 目录和 Claude Code、Codex、Pi 入口，增加单个 Skill 安装入口。

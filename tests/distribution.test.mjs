@@ -67,6 +67,9 @@ for archive in source.glob('*.zip'):
     assert.equal(JSON.parse(readFileSync(join(directory, 'SOURCE.json'))).version, manifest.version);
   }
   const drawio = join(extracted, 'drawio');
+  const probe = execFileSync('python3', ['-B', join(extracted, 'video-download/scripts/check_dependencies.py'), '--help'], { cwd: root, encoding: 'utf8' });
+  assert.match(probe, /--youtube/);
+  assert.ok(existsSync(join(extracted, 'video-download/references/dependencies.md')));
   const result = join(root, 'diagram.drawio');
   execFileSync(process.execPath, [join(drawio, 'scripts/cli.js'), join(drawio, 'references/examples/login-flow.yaml'), result, '--validate'], { cwd: root });
   assert.match(readFileSync(result, 'utf8'), /<mxfile/);
