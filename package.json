@@ -26,7 +26,8 @@
   },
   "scripts": {
     "check": "node scripts/validate-plugin-metadata.mjs && node scripts/validate-skills.mjs",
-    "test": "node --test tests/*.test.mjs && npm run test:drawio",
+    "test": "node --test tests/*.test.mjs && npm run test:video && npm run test:drawio",
+    "test:video": "python3 -B -m unittest discover -s tests -p '*_test.py'",
     "test:drawio": "node --test plugins/productivity/skills/drawio/scripts/dsl/*.test.js",
     "package": "npm run check && python3 scripts/package-skills.py"
   },
