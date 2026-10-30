@@ -5,7 +5,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parent.parent
-SPEC = importlib.util.spec_from_file_location('check_dependencies', ROOT / 'plugins/productivity/skills/video-download/scripts/check_dependencies.py')
+SPEC = importlib.util.spec_from_file_location('check_dependencies', ROOT / 'plugins/media/skills/video-download/scripts/check_dependencies.py')
 CHECK = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(CHECK)
 

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "media",
+  "version": "0.4.0",
+  "description": "Download video, audio and subtitles with dependency checks and verified results.",
+  "author": {
+    "name": "MaybeLL"
+  },
+  "license": "MIT"
+}

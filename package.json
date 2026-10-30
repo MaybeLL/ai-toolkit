@@ -1,8 +1,8 @@
 {
   "name": "ai-toolkit-pi-package",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
-  "description": "MaybeLL's personal productivity skills for coding agents.",
+  "description": "MaybeLL's engineering, learning, diagram and media skills for coding agents.",
   "license": "MIT",
   "keywords": [
     "pi-package",
@@ -13,7 +13,10 @@
   "type": "module",
   "pi": {
     "skills": [
-      "./plugins/productivity/skills"
+      "./plugins/diagrams/skills",
+      "./plugins/engineering/skills",
+      "./plugins/learning/skills",
+      "./plugins/media/skills"
     ]
   },
   "peerDependencies": {
@@ -26,9 +29,8 @@
   },
   "scripts": {
     "check": "node scripts/validate-plugin-metadata.mjs && node scripts/validate-skills.mjs",
-    "test": "node --test tests/*.test.mjs && npm run test:video && npm run test:drawio",
+    "test": "node --test tests/*.test.mjs && npm run test:video",
     "test:video": "python3 -B -m unittest discover -s tests -p '*_test.py'",
-    "test:drawio": "node --test plugins/productivity/skills/drawio/scripts/dsl/*.test.js",
     "package": "npm run check && python3 scripts/package-skills.py"
   },
   "devDependencies": {

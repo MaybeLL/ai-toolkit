@@ -1,4 +1,9 @@
 {
   "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
-  "paths": ["./plugins/productivity/skills"]
+  "paths": [
+    "./plugins/diagrams/skills",
+    "./plugins/engineering/skills",
+    "./plugins/learning/skills",
+    "./plugins/media/skills"
+  ]
 }

@@ -1,0 +1,15 @@
+{
+  "name": "diagrams",
+  "version": "0.4.0",
+  "description": "Create editable Excalidraw flowcharts, architecture diagrams and mind maps.",
+  "author": {
+    "name": "MaybeLL"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Diagrams",
+    "shortDescription": "Create editable Excalidraw flowcharts, architecture diagrams and mind maps.",
+    "developerName": "MaybeLL",
+    "category": "Productivity"
+  }
+}

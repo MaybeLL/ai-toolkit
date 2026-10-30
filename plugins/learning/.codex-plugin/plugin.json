@@ -1,0 +1,15 @@
+{
+  "name": "learning",
+  "version": "0.4.0",
+  "description": "Research primary sources, learn topics and clarify difficult explanations.",
+  "author": {
+    "name": "MaybeLL"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Learning",
+    "shortDescription": "Research primary sources, learn topics and clarify difficult explanations.",
+    "developerName": "MaybeLL",
+    "category": "Productivity"
+  }
+}

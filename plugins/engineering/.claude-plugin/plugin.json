@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "engineering",
+  "version": "0.4.0",
+  "description": "Plan, model, implement and review software with focused design and testing workflows.",
+  "author": {
+    "name": "MaybeLL"
+  },
+  "license": "MIT"
+}
