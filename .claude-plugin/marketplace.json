@@ -1,20 +1,33 @@
 {
   "name": "maybell-plugins",
-  "description": "MaybeLL's personal agent tools and productivity skills.",
+  "description": "MaybeLL's engineering, learning, diagram and media skills.",
   "owner": {
     "name": "MaybeLL"
   },
   "plugins": [
     {
-      "name": "productivity",
-      "source": "./plugins/productivity",
-      "description": "Reusable skills for software design, code review, research, learning, diagrams and video downloads.",
-      "category": "Productivity",
-      "tags": [
-        "productivity",
-        "skills",
-        "personal-toolkit"
-      ]
+      "name": "diagrams",
+      "source": "./plugins/diagrams",
+      "description": "Create editable Excalidraw flowcharts, architecture diagrams and mind maps.",
+      "category": "productivity"
+    },
+    {
+      "name": "engineering",
+      "source": "./plugins/engineering",
+      "description": "Plan, model, implement and review software with focused design and testing workflows.",
+      "category": "productivity"
+    },
+    {
+      "name": "learning",
+      "source": "./plugins/learning",
+      "description": "Research primary sources, learn topics and clarify difficult explanations.",
+      "category": "productivity"
+    },
+    {
+      "name": "media",
+      "source": "./plugins/media",
+      "description": "Download video, audio and subtitles with dependency checks and verified results.",
+      "category": "productivity"
     }
   ]
 }

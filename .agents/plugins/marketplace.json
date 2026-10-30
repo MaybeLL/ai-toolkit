@@ -5,10 +5,46 @@
   },
   "plugins": [
     {
-      "name": "productivity",
+      "name": "diagrams",
       "source": {
         "source": "local",
-        "path": "./plugins/productivity"
+        "path": "./plugins/diagrams"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "engineering",
+      "source": {
+        "source": "local",
+        "path": "./plugins/engineering"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "learning",
+      "source": {
+        "source": "local",
+        "path": "./plugins/learning"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "media",
+      "source": {
+        "source": "local",
+        "path": "./plugins/media"
       },
       "policy": {
         "installation": "AVAILABLE",

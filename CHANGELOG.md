@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.0
+
+- **不兼容变更**：删除 `drawio` 及其运行资源和测试。
+- 移除 `productivity` 插件与旧源码路径，直接切换为 `engineering`、`learning`、`diagrams`、`media` 四个插件，共 12 个 Skill；不提供旧插件别名或过渡入口。
+- Claude Code / Codex 按新插件名安装；Pi 仍支持整仓库安装，单个 Skill 名称和按需安装方式保持不变。
+- 多插件发现、校验和独立打包共用各插件内的唯一源码；更新安装说明及分发验证。
+
 ## 0.3.0
 
 - video-download 增加只读依赖探测、明确的安装确认流程和本地安装指导；安装后复查，并按字幕/媒体与 YouTube 场景选择所需组件。

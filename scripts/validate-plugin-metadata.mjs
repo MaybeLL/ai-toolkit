@@ -4,15 +4,13 @@
 // Run from the repo root: `node scripts/validate-plugin-metadata.mjs`
 // Reports all failed assertions before exiting non-zero.
 import { readFileSync, existsSync, readdirSync } from "node:fs";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join, basename } from "node:path";
+import { repo, discoverPlugins, discoverSkills } from './catalog.mjs';
 
-const repo = join(dirname(fileURLToPath(import.meta.url)), "..");
 const pluginsDir = join(repo, "plugins");
-const pluginDirs = readdirSync(pluginsDir, { withFileTypes: true })
-  .filter((d) => d.isDirectory())
-  .map((d) => d.name)
-  .sort();
+const plugins = discoverPlugins();
+const pluginDirs = plugins.map(plugin => plugin.name);
+const skills = discoverSkills();
 const pkg = readJson(join(repo, "package.json"));
 
 let failures = 0;
@@ -60,6 +58,19 @@ for (const name of pluginDirs) {
   }
 }
 
+// These workflow wrappers must remain installable with their companions.
+for (const plugin of plugins) {
+  const names = plugin.skills.map(path => basename(path));
+  for (const [name, companions] of Object.entries({
+    'grill-me': ['grilling'],
+    'grill-with-docs': ['grilling', 'domain-modeling'],
+  })) {
+    if (names.includes(name)) {
+      for (const companion of companions) check(names.includes(companion), `${name}: companion ${companion} must be in the same plugin`);
+    }
+  }
+}
+
 // Pi package resources: every plugin's skills dir must be declared in pi.skills
 check(Array.isArray(pkg.keywords) && pkg.keywords.includes("pi-package"), 'package.json keywords include "pi-package"');
 check(
@@ -86,14 +97,15 @@ for (const mp of marketplaces) {
     JSON.stringify(listed.sort()) === JSON.stringify([...pluginDirs].sort()),
     `${mp} lists all plugins: ${listed.join(", ")} == ${pluginDirs.join(", ")}`
   );
+  for (const entry of m.plugins ?? []) {
+    const source = mp.startsWith('.agents/') ? entry.source?.path : entry.source;
+    check(source === `./plugins/${entry.name}`, `${mp}: ${entry.name} source points to its plugin`);
+    if (mp.startsWith('.agents/')) check(entry.source?.source === 'local', `${mp}: local plugin source required`);
+  }
 }
 
 if (failures > 0) {
   console.error(`\n${failures} metadata check(s) failed.`);
   process.exit(1);
 }
-const totalSkills = pluginDirs.reduce((acc, n) => {
-  const p = join(pluginsDir, n, "skills");
-  return acc + (existsSync(p) ? readdirSync(p).filter((x) => !x.startsWith(".")).length : 0);
-}, 0);
-console.log(`✓ plugin metadata valid: ${pluginDirs.length} plugin(s), ${totalSkills} skill(s), both marketplaces, Pi resources.`);
+console.log(`✓ plugin metadata valid: ${pluginDirs.length} plugin(s), ${skills.length} skill(s), both marketplaces, Pi resources.`);

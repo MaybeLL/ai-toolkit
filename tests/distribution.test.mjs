@@ -2,9 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, readdirSync, rmSync, symlinkSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, basename, relative } from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { validateSkill, repo, skillRoot } from '../scripts/validate-skills.mjs';
+import { validateSkill, repo, discoverSkills } from '../scripts/validate-skills.mjs';
+import { discoverPlugins } from '../scripts/catalog.mjs';
+
+const skillDirectories = discoverSkills();
 
 function temporary(t) {
   const dir = mkdtempSync(join(tmpdir(), 'ai-toolkit-test-'));
@@ -32,7 +35,13 @@ test('validator rejects malformed metadata, missing resources and paths outside 
   assert.ok(validateSkill(skill).some(e => e.includes('symlink')));
 });
 
-test('every ZIP is self-contained, licensed, checksummed and repeatable; extracted drawio runs offline', t => {
+test('discovery rejects duplicate Skill names across plugins', t => {
+  const root = temporary(t);
+  for (const name of ['one', 'two']) mkdirSync(join(root, 'plugins', name, 'skills', 'same-skill'), { recursive: true });
+  assert.throws(() => discoverSkills(root), /Duplicate Skill name/);
+});
+
+test('every ZIP is self-contained, licensed, checksummed and repeatable; extracted scripts run offline', t => {
   const root = temporary(t);
   const output = join(root, 'release');
   const rebuilt = join(root, 'rebuilt');
@@ -40,7 +49,8 @@ test('every ZIP is self-contained, licensed, checksummed and repeatable; extract
     execFileSync('python3', ['scripts/package-skills.py', '--output', destination], { cwd: repo });
   }
   const manifest = JSON.parse(readFileSync(join(output, 'release.json')));
-  assert.equal(manifest.skills.length, readdirSync(skillRoot).length);
+  assert.deepEqual(manifest.skills.map(skill => skill.name).sort(), skillDirectories.map(path => basename(path)).sort());
+  assert.ok(!manifest.skills.some(skill => skill.name === 'drawio'));
   for (const file of readdirSync(output)) {
     assert.deepEqual(readFileSync(join(output, file)), readFileSync(join(rebuilt, file)), file);
   }
@@ -64,28 +74,63 @@ for archive in source.glob('*.zip'):
     const directory = join(extracted, name);
     assert.deepEqual(validateSkill(directory), []);
     assert.ok(existsSync(join(directory, 'LICENSE')));
-    assert.equal(JSON.parse(readFileSync(join(directory, 'SOURCE.json'))).version, manifest.version);
+    const source = JSON.parse(readFileSync(join(directory, 'SOURCE.json')));
+    assert.equal(source.version, manifest.version);
+    const sourceDirectory = skillDirectories.find(path => basename(path) === name);
+    assert.equal(source.path, relative(repo, sourceDirectory).split('\\').join('/'));
+    assert.equal(readFileSync(join(directory, 'SKILL.md'), 'utf8'), readFileSync(join(sourceDirectory, 'SKILL.md'), 'utf8'));
   }
-  const drawio = join(extracted, 'drawio');
   const probe = execFileSync('python3', ['-B', join(extracted, 'video-download/scripts/check_dependencies.py'), '--help'], { cwd: root, encoding: 'utf8' });
   assert.match(probe, /--youtube/);
   assert.ok(existsSync(join(extracted, 'video-download/references/dependencies.md')));
-  const result = join(root, 'diagram.drawio');
-  execFileSync(process.execPath, [join(drawio, 'scripts/cli.js'), join(drawio, 'references/examples/login-flow.yaml'), result, '--validate'], { cwd: root });
-  assert.match(readFileSync(result, 'utf8'), /<mxfile/);
+  const result = join(root, 'diagram.excalidraw');
+  writeFileSync(result, JSON.stringify({ type: 'excalidraw', version: 2, elements: [] }));
+  execFileSync('python3', ['-B', join(extracted, 'excalidraw-diagram-generator/scripts/add-arrow.py'), result, '0', '0', '100', '50'], { cwd: root });
+  const diagram = JSON.parse(readFileSync(result));
+  assert.equal(diagram.elements.length, 1);
+  assert.equal(diagram.elements[0].type, 'arrow');
+  assert.deepEqual(diagram.elements[0].points, [[0, 0], [100, 50]]);
   assert.throws(() => execFileSync('python3', ['scripts/package-skills.py', '--output', output], { cwd: repo, stdio: 'pipe' }), /Output must be empty/);
 });
 
-test('pinned skills CLI discovers all skills and installs a selected skill into an isolated project', t => {
+test('pinned skills CLI discovers all plugins and installs a selected Skill from each group', t => {
   const root = temporary(t);
   const cli = join(repo, 'node_modules/skills/bin/cli.mjs');
   const options = { cwd: root, encoding: 'utf8', env: { ...process.env, DISABLE_TELEMETRY: '1', DO_NOT_TRACK: '1', CI: 'true' }, timeout: 60000 };
   const listed = execFileSync(process.execPath, [cli, 'add', repo, '--list'], options);
-  for (const name of readdirSync(skillRoot)) assert.ok(listed.includes(name), `discovered ${name}`);
-  execFileSync(process.execPath, [cli, 'add', repo, '--skill', 'software-design-philosophy', '--agent', 'codex', '--copy', '-y'], options);
-  const installed = join(root, '.agents/skills/software-design-philosophy');
-  assert.deepEqual(validateSkill(installed), []);
-  assert.equal(readFileSync(join(installed, 'SKILL.md'), 'utf8'), readFileSync(join(skillRoot, 'software-design-philosophy/SKILL.md'), 'utf8'));
-  assert.ok(existsSync(join(installed, 'references/sources.md')));
-  assert.deepEqual(readdirSync(join(root, '.agents/skills')), ['software-design-philosophy']);
+  for (const directory of skillDirectories) assert.ok(listed.includes(basename(directory)), `discovered ${directory}`);
+  assert.ok(!listed.includes('drawio'));
+  for (const name of ['software-design-philosophy', 'teach', 'excalidraw-diagram-generator', 'video-download']) {
+    const project = join(root, name);
+    mkdirSync(project);
+    execFileSync(process.execPath, [cli, 'add', repo, '--skill', name, '--agent', 'codex', '--copy', '-y'], { ...options, cwd: project });
+    const installed = join(project, '.agents/skills', name);
+    assert.deepEqual(validateSkill(installed), []);
+    const source = skillDirectories.find(path => basename(path) === name);
+    assert.equal(readFileSync(join(installed, 'SKILL.md'), 'utf8'), readFileSync(join(source, 'SKILL.md'), 'utf8'));
+    assert.deepEqual(readdirSync(join(project, '.agents/skills')), [name]);
+  }
+  assert.ok(existsSync(join(root, 'software-design-philosophy/.agents/skills/software-design-philosophy/references/sources.md')));
+});
+
+test('each plugin installs only its own Skills, including engineering companions', t => {
+  const root = temporary(t);
+  const cli = join(repo, 'node_modules/skills/bin/cli.mjs');
+  const plugins = discoverPlugins();
+  assert.deepEqual(plugins.map(plugin => plugin.name), ['diagrams', 'engineering', 'learning', 'media']);
+  assert.ok(!existsSync(join(repo, 'plugins/productivity')));
+  for (const plugin of plugins) {
+    const project = join(root, plugin.name);
+    mkdirSync(project);
+    const names = plugin.skills.map(path => basename(path)).sort();
+    execFileSync(process.execPath, [cli, 'add', plugin.directory, '--skill', ...names, '--agent', 'codex', '--copy', '-y'], {
+      cwd: project, encoding: 'utf8', timeout: 60000,
+      env: { ...process.env, DISABLE_TELEMETRY: '1', DO_NOT_TRACK: '1', CI: 'true' },
+    });
+    assert.deepEqual(readdirSync(join(project, '.agents/skills')).sort(), names);
+    for (const name of names) assert.deepEqual(validateSkill(join(project, '.agents/skills', name)), []);
+    if (plugin.name === 'engineering') {
+      for (const name of ['grill-me', 'grilling', 'grill-with-docs', 'domain-modeling']) assert.ok(names.includes(name));
+    }
+  }
 });

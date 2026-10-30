@@ -9,7 +9,7 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SKILLS = ROOT / "plugins/productivity/skills"
+PLUGINS = ROOT / "plugins"
 EXCLUDED = {".git", "node_modules", "__pycache__", ".DS_Store", ".gitignore", "reports", "fixtures"}
 
 
@@ -38,9 +38,27 @@ def write_zip(path, files):
             archive.writestr(info, content)
 
 
+def skill_directories():
+    names = set()
+    for plugin in sorted(PLUGINS.iterdir()):
+        if plugin.is_symlink() or not plugin.is_dir():
+            raise ValueError(f"Invalid plugin directory: {plugin}")
+        root = plugin / "skills"
+        if root.is_symlink() or not root.is_dir():
+            raise ValueError(f"Invalid skills directory: {root}")
+        for skill in sorted(root.iterdir()):
+            if skill.is_symlink() or not skill.is_dir() or not (skill / "SKILL.md").is_file():
+                raise ValueError(f"Invalid skill directory: {skill}")
+            if skill.name in names:
+                raise ValueError(f"Duplicate Skill name across plugins: {skill.name}")
+            names.add(skill.name)
+            yield skill
+
+
 def build(output):
-    if output == SKILLS or SKILLS in output.parents:
-        raise ValueError("Output must be outside the Skill source tree")
+    if output == PLUGINS or PLUGINS in output.parents:
+        raise ValueError("Output must be outside the plugin source tree")
+    skills = list(skill_directories())
     version = json.loads((ROOT / "package.json").read_text())["version"]
     if not re.fullmatch(r"\d+\.\d+\.\d+", version):
         raise ValueError("Release version must be stable semver")
@@ -50,9 +68,7 @@ def build(output):
         raise ValueError(f"Output must be empty to avoid stale artifacts: {output}")
     output.mkdir(parents=True, exist_ok=True)
     release = {"version": version, "commit": commit, "dirty": dirty, "skills": []}
-    for skill in sorted(SKILLS.iterdir()):
-        if not skill.is_dir() or not (skill / "SKILL.md").is_file():
-            raise ValueError(f"Invalid skill directory: {skill}")
+    for skill in skills:
         files = {f"{skill.name}/{p.relative_to(skill).as_posix()}": (p.read_bytes(), bool(p.stat().st_mode & 0o111)) for p in payload_files(skill)}
         files.setdefault(f"{skill.name}/LICENSE", ((ROOT / "LICENSE").read_bytes(), False))
         source = {"repository": "https://github.com/MaybeLL/ai-toolkit", "path": skill.relative_to(ROOT).as_posix(), "version": version, "commit": commit, "dirty": dirty}

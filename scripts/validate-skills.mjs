@@ -3,9 +3,9 @@ import { resolve, relative, dirname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseDocument } from 'yaml';
 import { marked } from 'marked';
+import { repo, discoverSkills } from './catalog.mjs';
 
-export const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-export const skillRoot = resolve(repo, 'plugins/productivity/skills');
+export { repo, discoverSkills };
 const inside = (root, path) => path === root || path.startsWith(root + sep);
 
 export function validateSkill(directory) {
@@ -63,7 +63,7 @@ export function validateSkill(directory) {
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const directories = process.argv.slice(2);
-  const targets = directories.length ? directories : readdirSync(skillRoot).map(name => resolve(skillRoot, name));
+  const targets = directories.length ? directories : discoverSkills();
   const errors = targets.flatMap(validateSkill);
   if (errors.length) { console.error(errors.join('\n')); process.exitCode = 1; }
   else console.log(`✓ ${targets.length} skills: YAML, names, UI metadata and local Markdown links valid.`);
