@@ -1,6 +1,6 @@
 {
   "name": "ai-toolkit-pi-package",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "MaybeLL's personal productivity skills for coding agents.",
   "license": "MIT",
