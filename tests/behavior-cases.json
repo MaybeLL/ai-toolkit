@@ -209,5 +209,27 @@
       "无需对话引文、来源归属或逐边依据表，图表达问题本身的结构",
       "不把概念分析写成已确认的具体事故根因，不虚构系统实现或评测结果"
     ]
+  },
+  {
+    "id": "book-convert-markdown",
+    "skill": "book-to-skill",
+    "prompt": "使用 book-to-skill 将我提供的自有 Markdown 手册转成可复用 Skill，输出到指定项目目录。",
+    "inputs": "提供包含两个章节、命名框架和行动步骤的原创 Markdown 手册，以及空输出目录；明确内容类型为 text。",
+    "expect": [
+      "使用当前加载 Skill 内的提取器，不依赖全局同名安装",
+      "生成可操作的框架、原则和章节索引，而非复制全文",
+      "运行包内 tools/scan_generated_skill.py 检查生成结果",
+      "遵守指定输出目录，不自动发布 GitHub"
+    ]
+  },
+  {
+    "id": "book-analyze-only",
+    "skill": "book-to-skill",
+    "prompt": "只分析这个文档有哪些框架和方法，先不要生成 Skill。",
+    "inputs": "提供原创纯文本材料，明确内容类型为 text。",
+    "expect": [
+      "执行分析模式并提供结构化提取报告",
+      "不生成 Skill 文件或发布仓库"
+    ]
   }
 ]

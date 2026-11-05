@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- learning 插件引入 MIT 许可的 `virgiliojr94/book-to-skill`（固定提交 `e7bb659`），包含提取器与生成结果扫描器；全仓库共 14 个 Skill。
+- 提取器优先定位当前加载的 Skill，支持插件目录与独立 ZIP；补充来源记录、使用说明和分发验证。
+
 ## 0.4.0
 
 - **不兼容变更**：删除 `drawio` 及其运行资源和测试。

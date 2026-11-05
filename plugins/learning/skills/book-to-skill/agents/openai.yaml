@@ -1,0 +1,3 @@
+interface:
+  display_name: "Book to Skill"
+  short_description: "Convert books and documents into reusable agent skills"

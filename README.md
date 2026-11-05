@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/MaybeLL/ai-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MaybeLL/ai-toolkit/actions/workflows/ci.yml)
 
-MaybeLL 维护的通用 Agent 工具箱，提供 Skill、插件和可复用提示词，覆盖设计、编码、评审、研究、学习和日常工具。13 个 Skill 按用途分为 4 个插件；每个 Skill 只有一份源码，可单独安装，也可按插件安装。
+MaybeLL 维护的通用 Agent 工具箱，提供 Skill、插件和可复用提示词，覆盖设计、编码、评审、研究、学习和日常工具。14 个 Skill 按用途分为 4 个插件；每个 Skill 只有一份源码，可单独安装，也可按插件安装。
 
 ## 常用提示词
 
@@ -37,6 +37,7 @@ npx skills@1.7.4 update software-design-philosophy -g
 |---|---|---|
 | [software-design-philosophy](plugins/engineering/skills/software-design-philosophy) | 软件设计、编码、修复、重构与评审；附本地依据 | 无外部运行依赖，依据可离线阅读 |
 | [video-download](plugins/media/skills/video-download) | 下载视频、音频、字幕并检查成品 | yt-dlp、ffmpeg/ffprobe；部分站点需 JS 运行时与网络 |
+| [book-to-skill](plugins/learning/skills/book-to-skill) | 将书籍和文档转换为可复用的 Agent Skill | Python 3.10+；其他格式按需安装提取依赖，技术模式使用 Docling |
 | [discussion-map](plugins/learning/skills/discussion-map) | 理解讨论中的问题，绘出概念及其内在联系 | Mermaid 源码无外部依赖；预览需要宿主支持 |
 | [explain-clearly](plugins/learning/skills/explain-clearly) | 清晰解释概念、机制和设计 | 手动调用 |
 | [grilling](plugins/engineering/skills/grilling) | 深入审视计划、决策和想法 | 可按请求触发 |
@@ -76,7 +77,7 @@ npx skills@1.7.4 add MaybeLL/ai-toolkit --skill grill-with-docs grilling domain-
 | 插件 | 包含的 Skill |
 |---|---|
 | `engineering` | software-design-philosophy、domain-modeling、tdd、grilling、grill-me、grill-with-docs |
-| `learning` | research、teach、explain-clearly、wait-what、discussion-map |
+| `learning` | research、teach、explain-clearly、wait-what、discussion-map、book-to-skill |
 | `diagrams` | excalidraw-diagram-generator |
 | `media` | video-download |
 
@@ -91,7 +92,7 @@ claude plugin install engineering@maybell-plugins
 codex plugin marketplace add MaybeLL/ai-toolkit --ref main
 codex plugin add engineering@maybell-plugins
 
-# Pi：安装整个仓库的 13 个 Skill
+# Pi：安装整个仓库的 14 个 Skill
 pi install git:github.com/MaybeLL/ai-toolkit
 ```
 
@@ -116,6 +117,6 @@ npm run package
 
 ## 独立产品与来源
 
-[EvalMe](https://github.com/MaybeLL/evalme) 已独立维护，不随本仓库打包；原用户见 [迁移说明](https://github.com/MaybeLL/evalme/blob/main/docs/MIGRATION.md)。Book2Skill 等第三方工具独立安装，机器专属服务 Skill 留在对应产品仓库。
+[EvalMe](https://github.com/MaybeLL/evalme) 已独立维护，不随本仓库打包；原用户见 [迁移说明](https://github.com/MaybeLL/evalme/blob/main/docs/MIGRATION.md)。`book-to-skill` 已从 [virgiliojr94/book-to-skill](https://github.com/virgiliojr94/book-to-skill) 引入，保留 MIT 许可证和[固定上游提交记录](plugins/learning/skills/book-to-skill/UPSTREAM.md)；机器专属服务 Skill 留在对应产品仓库。
 
 仓库维护代码采用 [MIT](LICENSE)。保留导入 Skill 和 vendored 资源自己的许可证及来源；例如 wait-what 的 MIT 署名。软件设计哲学 Skill 是对原书方法的转述与应用，不包含原书全文，也不改变原书版权。

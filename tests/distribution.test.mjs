@@ -83,6 +83,27 @@ for archive in source.glob('*.zip'):
   const probe = execFileSync('python3', ['-B', join(extracted, 'video-download/scripts/check_dependencies.py'), '--help'], { cwd: root, encoding: 'utf8' });
   assert.match(probe, /--youtube/);
   assert.ok(existsSync(join(extracted, 'video-download/references/dependencies.md')));
+  const bookSkill = join(extracted, 'book-to-skill');
+  const bookInput = join(root, 'original handbook.md');
+  const bookWork = join(root, 'book-work');
+  const bookText = '# Review handbook\n\n## Chapter 1: Small steps\nValidate one observable behavior at a time.\n\n## Chapter 2: Evidence\nRecord the outcome before changing the next variable.\n';
+  writeFileSync(bookInput, bookText);
+  execFileSync('python3', ['-B', '-S', join(bookSkill, 'scripts/extract.py'), bookInput, '--mode', 'text', '--install-missing', 'no'], {
+    cwd: root, encoding: 'utf8',
+    env: { ...process.env, BOOK_SKILL_WORKDIR: bookWork },
+  });
+  assert.ok(readFileSync(join(bookWork, 'full_text.txt'), 'utf8').includes('Validate one observable behavior'));
+  const bookMetadata = JSON.parse(readFileSync(join(bookWork, 'metadata.json')));
+  assert.equal(bookMetadata.extraction_mode, 'text');
+  assert.equal(bookMetadata.total_sources, 1);
+  assert.equal(bookMetadata.sources[0].filename, 'original handbook.md');
+  assert.match(bookMetadata.sources[0].sha256, /^[a-f0-9]{64}$/);
+  assert.match(readFileSync(join(bookSkill, 'LICENSE'), 'utf8'), /Copyright \(c\) 2025 virgiliojr94/);
+  const generatedBook = join(root, 'generated-book-skill');
+  mkdirSync(generatedBook);
+  writeFileSync(join(generatedBook, 'SKILL.md'), '# Review method\nValidate one observable behavior at a time.\n');
+  const scanned = execFileSync('python3', ['-B', '-S', join(bookSkill, 'tools/scan_generated_skill.py'), generatedBook], { cwd: root, encoding: 'utf8' });
+  assert.match(scanned, /scan passed/);
   const result = join(root, 'diagram.excalidraw');
   writeFileSync(result, JSON.stringify({ type: 'excalidraw', version: 2, elements: [] }));
   execFileSync('python3', ['-B', join(extracted, 'excalidraw-diagram-generator/scripts/add-arrow.py'), result, '0', '0', '100', '50'], { cwd: root });
