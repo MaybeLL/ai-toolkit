@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/MaybeLL/ai-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MaybeLL/ai-toolkit/actions/workflows/ci.yml)
 
-MaybeLL 维护的通用 Agent Skill 合集：设计、编码、评审、研究、学习和日常工具。12 个 Skill 按用途分为 4 个插件；每个 Skill 只有一份源码，可单独安装，也可按插件安装。
+MaybeLL 维护的通用 Agent Skill 合集：设计、编码、评审、研究、学习和日常工具。13 个 Skill 按用途分为 4 个插件；每个 Skill 只有一份源码，可单独安装，也可按插件安装。
 
 ## 安装一个 Skill
 
@@ -33,6 +33,7 @@ npx skills@1.7.4 update software-design-philosophy -g
 |---|---|---|
 | [software-design-philosophy](plugins/engineering/skills/software-design-philosophy) | 软件设计、编码、修复、重构与评审；附本地依据 | 无外部运行依赖，依据可离线阅读 |
 | [video-download](plugins/media/skills/video-download) | 下载视频、音频、字幕并检查成品 | yt-dlp、ffmpeg/ffprobe；部分站点需 JS 运行时与网络 |
+| [discussion-map](plugins/learning/skills/discussion-map) | 理解讨论中的问题，绘出概念及其内在联系 | Mermaid 源码无外部依赖；预览需要宿主支持 |
 | [explain-clearly](plugins/learning/skills/explain-clearly) | 清晰解释概念、机制和设计 | 手动调用 |
 | [grilling](plugins/engineering/skills/grilling) | 深入审视计划、决策和想法 | 可按请求触发 |
 | [grill-me](plugins/engineering/skills/grill-me) | 逐问打磨计划 | 手动调用；同时安装 grilling |
@@ -50,6 +51,20 @@ npx skills@1.7.4 update software-design-philosophy -g
 npx skills@1.7.4 add MaybeLL/ai-toolkit --skill grill-with-docs grilling domain-modeling -a codex -g
 ```
 
+## 试用讨论逻辑图
+
+`discussion-map` 根据对话上下文理解用户正在探讨的问题，由 AI 判断概念之间的内在联系，补出必要的隐含关系，生成 Mermaid 逻辑图。对话提供背景；输出聚焦问题本身的知识结构，无需附对话依据或发言归属。
+
+在已加载该 Skill 的讨论会话中，只需触发：
+
+> $discussion-map
+
+无需附加指令或参数，会直接按上述方法整理当前可见讨论并生成图。需要限定话题时才额外说明。
+
+本地开发版可直接引用 `plugins/learning/skills/discussion-map/SKILL.md` 让 agent 读取并执行；也可按[维护说明](docs/MAINTAINING.md)链接到宿主的 Skill 目录后，打开新会话调用 `$discussion-map`。新增 Skill 尚未发布到远程时，请从本地源码试用。
+
+默认在回复中给出图源；是否直接预览取决于宿主的 Mermaid 支持。无需先选择节点，也不会只凭会话 ID 猜测不可见的历史。
+
 ## 按插件安装
 
 同一个 `maybell-plugins` marketplace 提供四个插件，按任务选择：
@@ -57,7 +72,7 @@ npx skills@1.7.4 add MaybeLL/ai-toolkit --skill grill-with-docs grilling domain-
 | 插件 | 包含的 Skill |
 |---|---|
 | `engineering` | software-design-philosophy、domain-modeling、tdd、grilling、grill-me、grill-with-docs |
-| `learning` | research、teach、explain-clearly、wait-what |
+| `learning` | research、teach、explain-clearly、wait-what、discussion-map |
 | `diagrams` | excalidraw-diagram-generator |
 | `media` | video-download |
 
@@ -72,7 +87,7 @@ claude plugin install engineering@maybell-plugins
 codex plugin marketplace add MaybeLL/ai-toolkit --ref main
 codex plugin add engineering@maybell-plugins
 
-# Pi：安装整个仓库的 12 个 Skill
+# Pi：安装整个仓库的 13 个 Skill
 pi install git:github.com/MaybeLL/ai-toolkit
 ```
 

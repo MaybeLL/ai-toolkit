@@ -1,0 +1,4 @@
+interface:
+  display_name: "Discussion Map"
+  short_description: "Understand topics and map their conceptual relationships"
+  default_prompt: "$discussion-map"

@@ -37,7 +37,7 @@ npm run package
 
 CI 的 skills CLI 测试不代替 Claude Code、Codex、Pi 原生插件验收。涉及插件清单、marketplace 或目录拆分时，在隔离配置或测试账号中检查：发现四个新插件且没有旧入口；安装一组后只加载该组 Skill；更新后仍能定位资源；卸载后不再加载。Claude Code 可额外运行 `claude plugin validate <插件目录>` 验证清单。记录宿主版本与实际结果，不把未运行的步骤记为通过。
 
-Pi 的仓库安装提供全部 Skill，验收其 `pi.skills` 四个目录和 12 个 Skill；按需安装由 skills CLI 提供。不要用用户日常配置做破坏性的安装/卸载测试。
+Pi 的仓库安装提供全部 Skill，验收其 `pi.skills` 四个目录和 13 个 Skill；按需安装由 skills CLI 提供。不要用用户日常配置做破坏性的安装/卸载测试。
 
 ## 版本发布
 
@@ -52,7 +52,7 @@ Pi 的仓库安装提供全部 Skill，验收其 `pi.skills` 四个目录和 12 
    git push origin v0.4.0
    ```
 
-4. `release.yml` 校验标签版本与 main 历史，重新测试和构建，并创建 **draft GitHub Release**，上传全部独立 Skill ZIP（当前 12 个）、校验和与来源清单。核对资源和版本说明后，在 GitHub 发布草稿。
+4. `release.yml` 校验标签版本与 main 历史，重新测试和构建，并创建 **draft GitHub Release**，上传全部独立 Skill ZIP（当前 13 个）、校验和与来源清单。核对资源和版本说明后，在 GitHub 发布草稿。
 
 版本标签只指向一次发布，不移动已有标签。修复用新版本；保留旧 Release 供回退。新增兼容能力升 minor，修复升 patch；改变调用方式、删除/重命名 Skill 时，在版本说明中明确不兼容变更及新入口。0.x 阶段的不兼容调整升 minor。
 
