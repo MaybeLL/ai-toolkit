@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "diagrams",
   "version": "0.4.0",
-  "description": "Create editable Excalidraw flowcharts, architecture diagrams and mind maps.",
+  "description": "Create editable Excalidraw diagrams and interactive HTML visual explanations.",
   "author": {
     "name": "MaybeLL"
   },

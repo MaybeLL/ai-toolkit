@@ -24,7 +24,7 @@ npm run package
 ```
 
 - `check`：四个插件及两个 marketplace 的版本/路径一致性、Skill 名称唯一性和组合依赖，Skill YAML、命名、描述、UI 字段，本地 Markdown 链接，以及机器专属 home 路径。
-- `test`：验证器与重名反例；所有 ZIP 的校验和、可重复构建、解压检查及来源路径；从临时目录运行解压后的媒体检查器和 Excalidraw 脚本；skills CLI 发现全部 Skill、逐组抽样单独安装、按插件目录安装且不混入其他组；依赖检查器回归测试。
+- `test`：验证器与重名反例；所有 ZIP 的校验和、可重复构建、解压检查及来源路径；从临时目录运行解压后的媒体检查器、Excalidraw 脚本、书籍提取器和 HTML 渲染器；skills CLI 发现全部 Skill、逐组抽样单独安装、按插件目录安装且不混入其他组；依赖检查器回归测试。
 - `package`：写入空的 `dist/`，每个 Skill 一个 ZIP，附 `release.json`、`SHA256SUMS`。每个包内有来源提交、发布版本和许可证。脏工作区可以本地试打包，但标记 `dirty: true`；正式发布拒绝脏状态。
 
 重复打包请指定新的空目录：`python3 scripts/package-skills.py --output /tmp/ai-toolkit-release-check`。打包器不会清空已有目录。ZIP 包含运行资源，排除测试文件、测试 fixtures、reports、缓存和开发依赖；源码安装会保留仓库中的完整 Skill 目录。
@@ -37,7 +37,7 @@ npm run package
 
 CI 的 skills CLI 测试不代替 Claude Code、Codex、Pi 原生插件验收。涉及插件清单、marketplace 或目录拆分时，在隔离配置或测试账号中检查：发现四个新插件且没有旧入口；安装一组后只加载该组 Skill；更新后仍能定位资源；卸载后不再加载。Claude Code 可额外运行 `claude plugin validate <插件目录>` 验证清单。记录宿主版本与实际结果，不把未运行的步骤记为通过。
 
-Pi 的仓库安装提供全部 Skill，验收其 `pi.skills` 四个目录和 14 个 Skill；按需安装由 skills CLI 提供。不要用用户日常配置做破坏性的安装/卸载测试。
+Pi 的仓库安装提供全部 Skill，验收其 `pi.skills` 四个目录和 15 个 Skill；按需安装由 skills CLI 提供。不要用用户日常配置做破坏性的安装/卸载测试。
 
 ## 版本发布
 
@@ -52,7 +52,7 @@ Pi 的仓库安装提供全部 Skill，验收其 `pi.skills` 四个目录和 14 
    git push origin v0.4.0
    ```
 
-4. `release.yml` 校验标签版本与 main 历史，重新测试和构建，并创建 **draft GitHub Release**，上传全部独立 Skill ZIP（当前 14 个）、校验和与来源清单。核对资源和版本说明后，在 GitHub 发布草稿。
+4. `release.yml` 校验标签版本与 main 历史，重新测试和构建，并创建 **draft GitHub Release**，上传全部独立 Skill ZIP（当前 15 个）、校验和与来源清单。核对资源和版本说明后，在 GitHub 发布草稿。
 
 版本标签只指向一次发布，不移动已有标签。修复用新版本；保留旧 Release 供回退。新增兼容能力升 minor，修复升 patch；改变调用方式、删除/重命名 Skill 时，在版本说明中明确不兼容变更及新入口。0.x 阶段的不兼容调整升 minor。
 

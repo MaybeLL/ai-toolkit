@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/MaybeLL/ai-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MaybeLL/ai-toolkit/actions/workflows/ci.yml)
 
-MaybeLL 维护的通用 Agent 工具箱，提供 Skill、插件和可复用提示词，覆盖设计、编码、评审、研究、学习和日常工具。14 个 Skill 按用途分为 4 个插件；每个 Skill 只有一份源码，可单独安装，也可按插件安装。
+MaybeLL 维护的通用 Agent 工具箱，提供 Skill、插件和可复用提示词，覆盖设计、编码、评审、研究、学习和日常工具。15 个 Skill 按用途分为 4 个插件；每个 Skill 只有一份源码，可单独安装，也可按插件安装。
 
 ## 常用提示词
 
@@ -47,6 +47,7 @@ npx skills@1.7.4 update software-design-philosophy -g
 | [research](plugins/learning/skills/research) | 一手来源研究 | 宿主支持后台代理、联网查询和文件写入 |
 | [tdd](plugins/engineering/skills/tdd) | 测试驱动开发 | 目标项目的测试工具 |
 | [teach](plugins/learning/skills/teach) | 在工作区进行教练式学习 | 工作区文件读写 |
+| [visual-explainer](plugins/diagrams/skills/visual-explainer) | 生成架构、方案、数据的 HTML 图解与交互解释 | Node.js 22.20+；浏览器检查及导出依赖见包内 RUNTIME.md |
 | [excalidraw-diagram-generator](plugins/diagrams/skills/excalidraw-diagram-generator) | Excalidraw 流程图、架构图、思维导图 | 基础 JSON 无额外依赖；辅助脚本 Python 3.10+ |
 | [wait-what](plugins/learning/skills/wait-what) | 重新用简单、有上下文的方式解释 | 手动调用 |
 
@@ -78,7 +79,7 @@ npx skills@1.7.4 add MaybeLL/ai-toolkit --skill grill-with-docs grilling domain-
 |---|---|
 | `engineering` | software-design-philosophy、domain-modeling、tdd、grilling、grill-me、grill-with-docs |
 | `learning` | research、teach、explain-clearly、wait-what、discussion-map、book-to-skill |
-| `diagrams` | excalidraw-diagram-generator |
+| `diagrams` | excalidraw-diagram-generator、visual-explainer |
 | `media` | video-download |
 
 下面以 `engineering` 为例，替换插件名即可安装其他组：
@@ -92,7 +93,7 @@ claude plugin install engineering@maybell-plugins
 codex plugin marketplace add MaybeLL/ai-toolkit --ref main
 codex plugin add engineering@maybell-plugins
 
-# Pi：安装整个仓库的 14 个 Skill
+# Pi：安装整个仓库的 15 个 Skill
 pi install git:github.com/MaybeLL/ai-toolkit
 ```
 
@@ -109,7 +110,7 @@ npm test
 npm run package
 ```
 
-源码位于 `plugins/<plugin>/skills/<skill>/`，不跨插件复制。CI 在 Linux 和 macOS 检查四组入口、组合依赖、格式、链接、独立 ZIP、单个安装和分组安装；从解压目录运行媒体检查器和 Excalidraw 脚本。这里的安装测试使用 skills CLI，宿主原生插件生命周期和模型行为另行验收。
+源码位于 `plugins/<plugin>/skills/<skill>/`，不跨插件复制。CI 在 Linux 和 macOS 检查四组入口、组合依赖、格式、链接、独立 ZIP、单个安装和分组安装；从解压目录运行媒体检查器、Excalidraw 脚本、书籍提取器和 HTML 渲染器。这里的安装测试使用 skills CLI，宿主原生插件生命周期和模型行为另行验收。
 
 - [维护、版本发布和回退](docs/MAINTAINING.md)
 - [版本记录](CHANGELOG.md) · [行为验收](tests/README.md)
@@ -120,3 +121,5 @@ npm run package
 [EvalMe](https://github.com/MaybeLL/evalme) 已独立维护，不随本仓库打包；原用户见 [迁移说明](https://github.com/MaybeLL/evalme/blob/main/docs/MIGRATION.md)。`book-to-skill` 已从 [virgiliojr94/book-to-skill](https://github.com/virgiliojr94/book-to-skill) 引入，保留 MIT 许可证和[固定上游提交记录](plugins/learning/skills/book-to-skill/UPSTREAM.md)；机器专属服务 Skill 留在对应产品仓库。
 
 仓库维护代码采用 [MIT](LICENSE)。保留导入 Skill 和 vendored 资源自己的许可证及来源；例如 wait-what 的 MIT 署名。软件设计哲学 Skill 是对原书方法的转述与应用，不包含原书全文，也不改变原书版权。
+
+`visual-explainer` 从 [nicobailon/visual-explainer](https://github.com/nicobailon/visual-explainer) 引入，固定上游 0.15.0 提交，保留 MIT 及 Pele 许可证。默认通过包内 Node CLI 使用；[来源记录](plugins/diagrams/skills/visual-explainer/UPSTREAM.md)与[依赖说明](plugins/diagrams/skills/visual-explainer/RUNTIME.md)随 Skill 一起分发。

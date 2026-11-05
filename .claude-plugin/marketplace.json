@@ -8,7 +8,7 @@
     {
       "name": "diagrams",
       "source": "./plugins/diagrams",
-      "description": "Create editable Excalidraw flowcharts, architecture diagrams and mind maps.",
+      "description": "Create editable Excalidraw diagrams and interactive HTML visual explanations.",
       "category": "productivity"
     },
     {

@@ -104,6 +104,34 @@ for archive in source.glob('*.zip'):
   writeFileSync(join(generatedBook, 'SKILL.md'), '# Review method\nValidate one observable behavior at a time.\n');
   const scanned = execFileSync('python3', ['-B', '-S', join(bookSkill, 'tools/scan_generated_skill.py'), generatedBook], { cwd: root, encoding: 'utf8' });
   assert.match(scanned, /scan passed/);
+  const visualSkill = join(extracted, 'visual-explainer');
+  const visualSource = join(root, 'cache.src.html');
+  const visualHtml = `<!doctype html><html lang="zh-CN" data-register="paper"><head>
+    <title>缓存命中</title><link rel="stylesheet" href="kit.css" data-ve-kit>
+    </head><body><main><h1>缓存命中减少回源</h1>
+    <figure><ve-bars label="延迟比较" unit="ms"><ve-bar value="2">Hit</ve-bar><ve-bar value="20">Miss</ve-bar></ve-bars><figcaption>命中延迟更低</figcaption></figure>
+    <figure><pre class="mermaid" aria-label="请求流程">flowchart LR
+    A[Client] --> B[Cache]</pre><figcaption>请求先检查缓存</figcaption></figure>
+    </main></body></html>`;
+  writeFileSync(visualSource, visualHtml);
+  // Structural packaging smoke test: no browser, npm modules, or network required.
+  // Browser visual acceptance is separate and must not be claimed from this check.
+  execFileSync(process.execPath, [join(visualSkill, 'kit/render.mjs'), visualSource, '--no-check'], { cwd: root });
+  const renderedVisual = readFileSync(join(root, 'cache.html'), 'utf8');
+  assert.match(renderedVisual, /<svg/);
+  assert.match(renderedVisual, /<style data-ve-kit>/);
+  assert.match(renderedVisual, /<script data-ve-kit>/);
+  assert.match(renderedVisual, /缓存命中减少回源/);
+  assert.doesNotMatch(renderedVisual, /<ve-bars\b|<pre class="mermaid"/);
+  assert.equal(readFileSync(visualSource, 'utf8'), visualHtml);
+  assert.ok(existsSync(join(visualSkill, 'kit/vendor/PELE-LICENSE')));
+  const visualDeps = JSON.parse(readFileSync(join(visualSkill, 'package.json')));
+  assert.ok(visualDeps.dependencies['pptxgenjs']);
+  assert.ok(visualDeps.optionalDependencies['playwright-core']);
+  const invalidVisualSource = join(root, 'invalid.src.html');
+  writeFileSync(invalidVisualSource, visualHtml.replace('data-register="paper"', 'data-register="unknown"'));
+  assert.throws(() => execFileSync(process.execPath, [join(visualSkill, 'kit/render.mjs'), invalidVisualSource, '--no-check'], { cwd: root, stdio: 'pipe' }), error => error.status !== 0 && /not a register/.test(String(error.stdout) + String(error.stderr)));
+  assert.equal(existsSync(join(root, 'invalid.html')), false);
   const result = join(root, 'diagram.excalidraw');
   writeFileSync(result, JSON.stringify({ type: 'excalidraw', version: 2, elements: [] }));
   execFileSync('python3', ['-B', join(extracted, 'excalidraw-diagram-generator/scripts/add-arrow.py'), result, '0', '0', '100', '50'], { cwd: root });

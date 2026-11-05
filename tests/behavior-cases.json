@@ -231,5 +231,27 @@
       "执行分析模式并提供结构化提取报告",
       "不生成 Skill 文件或发布仓库"
     ]
+  },
+  {
+    "id": "visual-explainer-html",
+    "skill": "visual-explainer",
+    "prompt": "用 visual-explainer 将给定的缓存命中与回源流程画成 HTML 图解，保存在指定目录。",
+    "inputs": "给出包含命中、未命中及失败路径的原创说明；Node.js 22.20+；提供空输出目录。",
+    "expect": [
+      "读取包内设计和图解参考资料",
+      "使用当前加载 Skill 的 kit/render.mjs，不依赖未注册的 Pi 或 MCP 工具",
+      "保留 src.html 源文件并交付渲染后的 HTML",
+      "执行浏览器检查；缺少依赖时明确报告未验证",
+      "不把含远程字体的单文件描述为完全离线"
+    ]
+  },
+  {
+    "id": "visual-explainer-scope",
+    "skill": "visual-explainer",
+    "prompt": "只用三句话解释缓存击穿，不要生成文件。",
+    "expect": [
+      "遵守用户格式要求",
+      "不创建 HTML 或启动浏览器"
+    ]
   }
 ]
