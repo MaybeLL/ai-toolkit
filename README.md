@@ -2,7 +2,11 @@
 
 [![CI](https://github.com/MaybeLL/ai-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MaybeLL/ai-toolkit/actions/workflows/ci.yml)
 
-MaybeLL 维护的通用 Agent Skill 合集：设计、编码、评审、研究、学习和日常工具。13 个 Skill 按用途分为 4 个插件；每个 Skill 只有一份源码，可单独安装，也可按插件安装。
+MaybeLL 维护的通用 Agent 工具箱，提供 Skill、插件和可复用提示词，覆盖设计、编码、评审、研究、学习和日常工具。13 个 Skill 按用途分为 4 个插件；每个 Skill 只有一份源码，可单独安装，也可按插件安装。
+
+## 常用提示词
+
+[Prompts 目录](Prompts/README.md) 按一个 Markdown 文件一个提示词的方式保存，方便查找和复制使用。当前包含[人生设计术](Prompts/life-design.md)和[Belief](Prompts/belief.md)。
 
 ## 安装一个 Skill
 
@@ -108,7 +112,7 @@ npm run package
 
 - [维护、版本发布和回退](docs/MAINTAINING.md)
 - [版本记录](CHANGELOG.md) · [行为验收](tests/README.md)
-- [可复用提示词](prompt/README.md)
+- [可复用提示词](Prompts/README.md)
 
 ## 独立产品与来源
 
