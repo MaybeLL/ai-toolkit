@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/MaybeLL/ai-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MaybeLL/ai-toolkit/actions/workflows/ci.yml)
 
-MaybeLL 维护的通用 Agent 工具箱，提供 Skill、插件和可复用提示词，覆盖设计、编码、评审、研究、学习和日常工具。15 个 Skill 按用途分为 4 个插件；每个 Skill 只有一份源码，可单独安装，也可按插件安装。
+MaybeLL 维护的通用 Agent 工具箱，提供 Skill、插件和可复用提示词，覆盖设计、编码、评审、研究、学习和日常工具。16 个 Skill 按用途分为 4 个插件；每个 Skill 只有一份源码，可单独安装，也可按插件安装。
 
 ## 常用提示词
 
@@ -47,6 +47,7 @@ npx skills@1.7.4 update software-design-philosophy -g
 | [research](plugins/learning/skills/research) | 一手来源研究 | 宿主支持后台代理、联网查询和文件写入 |
 | [tdd](plugins/engineering/skills/tdd) | 测试驱动开发 | 目标项目的测试工具 |
 | [teach](plugins/learning/skills/teach) | 在工作区进行教练式学习 | 工作区文件读写 |
+| [html-doc](plugins/diagrams/skills/html-doc) | 以图和交互为主的 HTML 说明、方案比较、研究报告和知识文档 | 浏览器用于实际页面验收；默认输出独立 HTML，无固定运行依赖 |
 | [visual-explainer](plugins/diagrams/skills/visual-explainer) | 生成架构、方案、数据的 HTML 图解与交互解释 | Node.js 22.20+；浏览器检查及导出依赖见包内 RUNTIME.md |
 | [excalidraw-diagram-generator](plugins/diagrams/skills/excalidraw-diagram-generator) | Excalidraw 流程图、架构图、思维导图 | 基础 JSON 无额外依赖；辅助脚本 Python 3.10+ |
 | [wait-what](plugins/learning/skills/wait-what) | 重新用简单、有上下文的方式解释 | 手动调用 |
@@ -79,7 +80,7 @@ npx skills@1.7.4 add MaybeLL/ai-toolkit --skill grill-with-docs grilling domain-
 |---|---|
 | `engineering` | software-design-philosophy、domain-modeling、tdd、grilling、grill-me、grill-with-docs |
 | `learning` | research、teach、explain-clearly、wait-what、discussion-map、book-to-skill |
-| `diagrams` | excalidraw-diagram-generator、visual-explainer |
+| `diagrams` | excalidraw-diagram-generator、visual-explainer、html-doc |
 | `media` | video-download |
 
 下面以 `engineering` 为例，替换插件名即可安装其他组：
@@ -93,7 +94,7 @@ claude plugin install engineering@maybell-plugins
 codex plugin marketplace add MaybeLL/ai-toolkit --ref main
 codex plugin add engineering@maybell-plugins
 
-# Pi：安装整个仓库的 15 个 Skill
+# Pi：安装整个仓库的 16 个 Skill
 pi install git:github.com/MaybeLL/ai-toolkit
 ```
 

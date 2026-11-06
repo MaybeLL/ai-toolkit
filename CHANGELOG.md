@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- diagrams 插件纳入 `html-doc`，包含以图和交互为主的 HTML 文档创作规范与 Codex 元数据；全仓库共 16 个 Skill。
+
 - diagrams 插件引入 `visual-explainer` 0.15.0（固定提交 `9d5f880`），保留渲染器、图解组件、参考材料和可选导出能力；全仓库共 15 个 Skill。
 
 - learning 插件引入 MIT 许可的 `virgiliojr94/book-to-skill`（固定提交 `e7bb659`），包含提取器与生成结果扫描器；全仓库共 14 个 Skill。
