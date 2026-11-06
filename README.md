@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/MaybeLL/ai-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MaybeLL/ai-toolkit/actions/workflows/ci.yml)
 
-MaybeLL 维护的通用 Agent 工具箱，提供 Skill、插件和可复用提示词，覆盖设计、编码、评审、研究、学习和日常工具。16 个 Skill 按用途分为 4 个插件；每个 Skill 只有一份源码，可单独安装，也可按插件安装。
+MaybeLL 维护的通用 Agent 工具箱，提供 Skill、插件和可复用提示词，覆盖设计、编码、评审、研究、学习和日常工具。17 个 Skill 按用途分为 4 个插件；每个 Skill 只有一份源码，可单独安装，也可按插件安装。
 
 ## 常用提示词
 
@@ -44,6 +44,7 @@ npx skills@1.7.4 update software-design-philosophy -g
 | [grill-me](plugins/engineering/skills/grill-me) | 逐问打磨计划 | 手动调用；同时安装 grilling |
 | [grill-with-docs](plugins/engineering/skills/grill-with-docs) | 访谈过程中沉淀领域文档 | 同时安装 grilling、domain-modeling |
 | [domain-modeling](plugins/engineering/skills/domain-modeling) | 领域模型、统一语言、ADR | 工作区文件读写 |
+| [build-on-prior-work](plugins/learning/skills/build-on-prior-work) | 调查前人研究，辨析经典问题关联，形成方案与验证计划 | 使用宿主可用的搜索、浏览或本地资料读取工具；无固定服务依赖 |
 | [research](plugins/learning/skills/research) | 一手来源研究 | 宿主支持后台代理、联网查询和文件写入 |
 | [tdd](plugins/engineering/skills/tdd) | 测试驱动开发 | 目标项目的测试工具 |
 | [teach](plugins/learning/skills/teach) | 在工作区进行教练式学习 | 工作区文件读写 |
@@ -79,7 +80,7 @@ npx skills@1.7.4 add MaybeLL/ai-toolkit --skill grill-with-docs grilling domain-
 | 插件 | 包含的 Skill |
 |---|---|
 | `engineering` | software-design-philosophy、domain-modeling、tdd、grilling、grill-me、grill-with-docs |
-| `learning` | research、teach、explain-clearly、wait-what、discussion-map、book-to-skill |
+| `learning` | research、teach、explain-clearly、wait-what、discussion-map、book-to-skill、build-on-prior-work |
 | `diagrams` | excalidraw-diagram-generator、visual-explainer、html-doc |
 | `media` | video-download |
 
@@ -94,7 +95,7 @@ claude plugin install engineering@maybell-plugins
 codex plugin marketplace add MaybeLL/ai-toolkit --ref main
 codex plugin add engineering@maybell-plugins
 
-# Pi：安装整个仓库的 16 个 Skill
+# Pi：安装整个仓库的 17 个 Skill
 pi install git:github.com/MaybeLL/ai-toolkit
 ```
 

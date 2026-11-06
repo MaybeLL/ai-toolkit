@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- learning 插件新增 `build-on-prior-work`，支持已有工作调查、经典问题关联与迁移判断、基于证据重审问题，以及方案和验证计划交付；全仓库共 17 个 Skill。
+
 - diagrams 插件纳入 `html-doc`，包含以图和交互为主的 HTML 文档创作规范与 Codex 元数据；全仓库共 16 个 Skill。
 
 - diagrams 插件引入 `visual-explainer` 0.15.0（固定提交 `9d5f880`），保留渲染器、图解组件、参考材料和可选导出能力；全仓库共 15 个 Skill。
